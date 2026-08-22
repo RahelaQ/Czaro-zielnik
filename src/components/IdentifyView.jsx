@@ -118,12 +118,12 @@ export default function IdentifyView({ herbById, onOpenHerb, onNavigate, collect
               )}
             </div>
 
-            <p style={{ margin: "0.8rem 0 0", color: "#5C6360", fontSize: "0.85rem", lineHeight: 1.55 }}>
+            <p style={{ margin: "0.8rem 0 0", color: "var(--text-body)", fontSize: "0.85rem", lineHeight: 1.55 }}>
               {result.opis}
             </p>
 
             {result.ostrzezenie && (
-              <div className="kupala-note" style={{ margin: "0.9rem 0 0", background: "#F7F4EC" }}>
+              <div className="kupala-note" style={{ margin: "0.9rem 0 0", background: "var(--bg-surface)" }}>
                 ⚠️ {result.ostrzezenie} Nigdy nie jedz ani nie stosuj rośliny na
                 podstawie samego rozpoznania ze zdjęcia — skonsultuj się z
                 doświadczonym zbieraczem lub atlasem roślin.

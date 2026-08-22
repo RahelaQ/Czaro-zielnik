@@ -1,9 +1,7 @@
 # 🌿 Czaro-Zielnik
 
-Osobisty zielnik ziół polskich — nazwy polskie i łacińskie, zdjęcia z
-Wikipedii, kalendarz zbioru, tradycje ludowo-magiczne przypisane do każdej
-rośliny, notatki własne oraz rozpoznawanie roślin ze zdjęcia (Pl@ntNet —
-darmowe, do 500 zdjęć dziennie).
+Osobisty zielnik ziół polskich — nazwy polskie i łacińskie, zdjęcia z Wikipedii, kalendarz zbioru, tradycje ludowo-magiczne przypisane do każdej
+rośliny, notatki własne oraz rozpoznawanie roślin ze zdjęcia (Pl@ntNet —darmowe, do 500 zdjęć dziennie).
 
 ## Struktura projektu
 

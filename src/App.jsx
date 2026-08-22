@@ -10,9 +10,6 @@ import { useMyCollection } from "./hooks/useMyCollection.js";
 import { useRecentlyViewed } from "./hooks/useRecentlyViewed.js";
 import { LeafIcon, MoonIcon, CameraIcon } from "./components/Icons.jsx";
 
-// Ekrany, które w nowym designie używają ciemnego motywu "Pine Smoke".
-const DARK_TABS = new Set(["kalendarz", "rozpoznaj"]);
-
 export default function App() {
   const [tab, setTab] = useState("home");
   const [opened, setOpened] = useState(null);
@@ -68,7 +65,7 @@ export default function App() {
   }, [recent.items, herbById]);
 
   return (
-    <div className={"app-root" + (DARK_TABS.has(tab) ? " theme-dark" : "")}>
+    <div className="app-root">
       {tab === "home" && (
         <HomeView
           onOpen={openHerb}
