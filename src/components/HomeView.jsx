@@ -1,5 +1,6 @@
 import React from "react";
 import HerbImage from "./HerbImage.jsx";
+import HarvestOfMonth from "./HarvestOfMonth.jsx";
 import { HERBS } from "../data/herbs.js";
 
 // Stabilne w ciągu dnia (liczone od epoki), zmienia się raz na dobę o północy —
@@ -71,6 +72,8 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
           </span>
         </button>
       </div>
+
+      <HarvestOfMonth herbs={HERBS} onOpen={onOpen} />
 
       {recentHerbs.length > 0 && (
         <>

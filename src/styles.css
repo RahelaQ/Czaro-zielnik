@@ -255,6 +255,83 @@ body { background: var(--bg-page); }
   margin-top: 0.15rem;
 }
 
+/* --------------------------------------------------------- Harvest of Month */
+.harvest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+  padding: 0 1.4rem 1rem;
+}
+.harvest-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.harvest-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(62, 68, 67, 0.1);
+}
+.harvest-card-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-image);
+  overflow: hidden;
+}
+.harvest-card-image .herb-photo {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+.harvest-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+}
+.harvest-card-text {
+  padding: 0.65rem 0.75rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.harvest-card-pl {
+  margin: 0 0 0.3rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  color: var(--text-main);
+  font-weight: 500;
+}
+.harvest-card-part {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  line-height: 1.3;
+  color: var(--text-muted);
+  flex: 1;
+}
+
 .archive-banner {
   width: calc(100% - 2.8rem);
   margin: 1.3rem 1.4rem 0;
