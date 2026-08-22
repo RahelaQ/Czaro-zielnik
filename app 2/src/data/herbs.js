@@ -13,6 +13,8 @@ export const HERBS = [
     moc: "Oczyszczenie, spokój, sen bez koszmarów, ochrona dzieci i domu. W wielu wsiach wieszano suszony rumianek nad kołyską.",
     dzien: "Niedziela (Słońce)",
     zywiol: "Woda",
+    rodzina: "Astrowate (Asteraceae)",
+    kategoria: "Kwiaty",
   },
   {
     id: "mieta",
@@ -24,6 +26,8 @@ export const HERBS = [
     moc: "Jasność umysłu, ochrona w podróży, oczyszczenie przestrzeni z ciężkiej energii. Dodawana do sakiewek na szczęście w interesach.",
     dzien: "Środa (Merkury)",
     zywiol: "Powietrze",
+    rodzina: "Jasnotowate (Lamiaceae)",
+    kategoria: "Liście",
   },
   {
     id: "pokrzywa",
@@ -35,6 +39,8 @@ export const HERBS = [
     moc: "Ochrona i odcinanie uroków — w tradycji ludowej rzucano pokrzywę na próg, by odciąć złą wolę sąsiadów. Symbol siły i wytrzymałości kobiet.",
     dzien: "Wtorek (Mars)",
     zywiol: "Ogień",
+    rodzina: "Pokrzywowate (Urticaceae)",
+    kategoria: "Liście",
   },
   {
     id: "lawenda",
@@ -46,6 +52,8 @@ export const HERBS = [
     moc: "Miłość, spokój ducha, wróżebne sny pod poduszką. Saszetki lawendowe chroniły bieliznę panny młodej.",
     dzien: "Środa / Piątek",
     zywiol: "Powietrze",
+    rodzina: "Jasnotowate (Lamiaceae)",
+    kategoria: "Kwiaty",
   },
   {
     id: "piolun",
@@ -57,6 +65,8 @@ export const HERBS = [
     moc: "Roślina wróżb i kontaktu z zaświatami. Wiązano ją w pas na noc kupałową, by widzieć duchy i przodków. Ochrona wędrowców.",
     dzien: "Poniedziałek (Księżyc)",
     zywiol: "Ziemia",
+    rodzina: "Astrowate (Asteraceae)",
+    kategoria: "Ziele",
   },
   {
     id: "dziurawiec",
@@ -68,6 +78,8 @@ export const HERBS = [
     moc: "Roślina słońca i nocy świętojańskiej (Kupały) — wplatana w wianki, chroniła przed złymi mocami i przełamywała klątwy. Zatykana za belki stropowe chroniła dom przed piorunem.",
     dzien: "Niedziela",
     zywiol: "Ogień",
+    rodzina: "Dziurawcowate (Hypericaceae)",
+    kategoria: "Ziele",
   },
   {
     id: "mniszek",
@@ -79,6 +91,8 @@ export const HERBS = [
     moc: "Roślina wróżb — zdmuchnięty puch niesie życzenie do zmarłych i duchów. Liczba pozostałych nasion miała wróżyć godzinę lub przyszłość.",
     dzien: "Czwartek (Jowisz)",
     zywiol: "Powietrze",
+    rodzina: "Astrowate (Asteraceae)",
+    kategoria: "Korzenie",
   },
   {
     id: "bez",
@@ -90,6 +104,8 @@ export const HERBS = [
     moc: "Drzewo Matki Bzowej (Boginki) ze słowiańskiego folkloru — mieszkanie przodkiń i opiekunek domu. Nigdy nie ścinano bzu bez pytania go o pozwolenie i przeprosin.",
     dzien: "Piątek / Sobota",
     zywiol: "Woda",
+    rodzina: "Piżmaczkowate (Adoxaceae)",
+    kategoria: "Kwiaty",
   },
   {
     id: "jalowiec",
@@ -101,6 +117,8 @@ export const HERBS = [
     moc: "Dym z jałowca oczyszczał chałupy z chorób i złych mocy — okadzano nim obórz i izby przed świętami. Ochrona progu domu.",
     dzien: "Niedziela",
     zywiol: "Ogień",
+    rodzina: "Cyprysowate (Cupressaceae)",
+    kategoria: "Owoce",
   },
   {
     id: "krwawnik",
@@ -112,6 +130,8 @@ export const HERBS = [
     moc: "Roślina wróżb miłosnych (płatki pod poduszkę) i odwagi. Symbolicznie i realnie tamowała krwawienia — łączona z więzią rodową i pamięcią przodków.",
     dzien: "Piątek",
     zywiol: "Woda",
+    rodzina: "Astrowate (Asteraceae)",
+    kategoria: "Ziele",
   },
   {
     id: "wierzba",
@@ -123,6 +143,8 @@ export const HERBS = [
     moc: "Drzewo żałoby, intuicji i magii księżycowej. Witki wierzbowe (bazie) święcone w Niedzielę Palmową chroniły dom przez cały rok.",
     dzien: "Poniedziałek",
     zywiol: "Woda",
+    rodzina: "Wierzbowate (Salicaceae)",
+    kategoria: "Kora",
   },
   {
     id: "brzoza",
@@ -134,6 +156,8 @@ export const HERBS = [
     moc: "Drzewo nowych początków i oczyszczenia — z gałązek robiono miotły do wymiatania złej energii z kątów domu. Ochrona dzieci i kołysek.",
     dzien: "Poniedziałek",
     zywiol: "Powietrze",
+    rodzina: "Brzozowate (Betulaceae)",
+    kategoria: "Kora",
   },
   {
     id: "wrotycz",
@@ -145,6 +169,8 @@ export const HERBS = [
     moc: "Wieszany w oknach i nad drzwiami odpędzał złe duchy i owady. Roślina ochrony granic domu i obejścia.",
     dzien: "Niedziela",
     zywiol: "Ogień",
+    rodzina: "Astrowate (Asteraceae)",
+    kategoria: "Ziele",
   },
 ];
 

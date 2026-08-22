@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import HerbCard from "./HerbCard.jsx";
 import { HERBS, MONTH_NAMES } from "../data/herbs.js";
+import { moonPhase } from "../utils/moonPhase.js";
 
 export default function CalendarView({ onOpen }) {
   const currentMonth = new Date().getMonth() + 1;
@@ -8,9 +9,39 @@ export default function CalendarView({ onOpen }) {
 
   const inSeason = HERBS.filter((h) => h.months.includes(selected));
   const isKupala = selected === 6;
+  const phase = moonPhase();
 
   return (
     <div className="calendar-view">
+      <div className="screen-header">
+        <div>
+          <h1>Kalendarz</h1>
+          <p>Rytm zbiorów i księżyca</p>
+        </div>
+      </div>
+
+      <div className="moon-card">
+        <div>
+          <span className="section-label" style={{ margin: 0 }}>
+            {phase.name.toUpperCase()}
+          </span>
+          <p className="moon-card-phase">
+            {phase.daysToFullMoon === 0
+              ? "Pełnia dziś"
+              : `Pełnia za ${phase.daysToFullMoon} dni`}
+          </p>
+          <p className="moon-card-sub">Czas wzrostu i nastawiania</p>
+        </div>
+        <div
+          className="moon-dial"
+          style={{
+            background: `conic-gradient(#CD9DA2 ${Math.round(
+              phase.fraction * 360
+            )}deg, var(--bg-image) 0deg)`,
+          }}
+        />
+      </div>
+
       <div className="month-scroller">
         {MONTH_NAMES.map((m, idx) => (
           <button
@@ -32,7 +63,7 @@ export default function CalendarView({ onOpen }) {
         </div>
       )}
 
-      <p className="section-label" style={{ marginTop: "1.2rem" }}>
+      <p className="section-label" style={{ marginTop: "1.3rem" }}>
         Do zbioru w {MONTH_NAMES[selected - 1].toLowerCase()}u
       </p>
 
