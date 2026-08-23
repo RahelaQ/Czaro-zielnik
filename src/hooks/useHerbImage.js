@@ -1,19 +1,29 @@
 import { useEffect, useState } from "react";
+import { HERB_PHOTOS } from "../data/herbPhotos.js";
 
-// Kolejność prób dla zdjęcia rośliny:
-//   1) Unsplash (przez nasz /api/images.js — ładniejsze, "dark mood",
-//      ale nie zawsze trafi w rzadszy gatunek)
-//   2) Wikimedia Commons, przez API polskiej Wikipedii (mniej efektowne,
-//      ale prawie zawsze trafne botanicznie)
-// Wynik cache'owany w pamięci na czas sesji, żeby appka nie odpytywała
-// dwa razy tej samej rośliny.
+// ---------------------------------------------------------------------------
+// ZDJĘCIE ROŚLINY — kolejność ma znaczenie w terenie.
+//
+//   1) zdjęcie wbudowane w appkę (public/herbs/) — natychmiast, bez sieci
+//   2) Wikimedia Commons — trafne botanicznie
+//   3) Unsplash — ładniejsze, ale często trafia w zupełnie inny gatunek
+//
+// Poprzednia wersja pytała najpierw Unsplash, przy KAŻDYM otwarciu karty
+// i zawsze przez sieć. W lesie to znaczyło: karta wisi, aż fetch padnie
+// po timeoucie. Teraz bez zasięgu w ogóle nie próbujemy sieci — pokazujemy
+// zdjęcie wbudowane albo od razu znak zastępczy.
+//
+// Zdjęcia pobrane raz z sieci zostają w cache service workera (patrz
+// vite.config.js), więc drugi raz też są natychmiastowe.
+// ---------------------------------------------------------------------------
+
 const imageCache = new Map();
 
 async function fetchWikimedia(title) {
   const url =
     "https://pl.wikipedia.org/w/api.php" +
     "?action=query&format=json&origin=*&formatversion=2" +
-    "&prop=pageimages&piprop=original|thumbnail&pithumbsize=500" +
+    "&prop=pageimages&piprop=original|thumbnail&pithumbsize=700" +
     "&titles=" +
     encodeURIComponent(title);
   const r = await fetch(url);
@@ -30,14 +40,33 @@ async function fetchUnsplash(query) {
   return { url: json.url || null, credit: json.credit || null };
 }
 
-export function useHerbImage({ wiki, nameLat }) {
-  const cacheKey = `${wiki}|${nameLat || ""}`;
+export function useHerbImage({ id, wiki, nameLat }) {
+  const local = id ? HERB_PHOTOS[id] : null;
+  const cacheKey = `${id || ""}|${wiki}|${nameLat || ""}`;
   const cached = imageCache.get(cacheKey);
-  const [src, setSrc] = useState(cached?.src);
-  const [credit, setCredit] = useState(cached?.credit ?? null);
-  const [status, setStatus] = useState(cached ? "ready" : "loading");
+
+  const [src, setSrc] = useState(local?.plik || cached?.src);
+  const [credit, setCredit] = useState(
+    local
+      ? { name: local.autor, link: local.zrodlo, licencja: local.licencja, zrodlo: "Wikimedia Commons" }
+      : cached?.credit ?? null
+  );
+  const [status, setStatus] = useState(local || cached ? "ready" : "loading");
 
   useEffect(() => {
+    // Zdjęcie wbudowane — nic nie pobieramy, koniec tematu.
+    if (local?.plik) {
+      setSrc(local.plik);
+      setCredit({
+        name: local.autor,
+        link: local.zrodlo,
+        licencja: local.licencja,
+        zrodlo: "Wikimedia Commons",
+      });
+      setStatus("ready");
+      return;
+    }
+
     if (imageCache.has(cacheKey)) {
       const c = imageCache.get(cacheKey);
       setSrc(c.src);
@@ -45,6 +74,12 @@ export function useHerbImage({ wiki, nameLat }) {
       setStatus(c.src ? "ready" : "error");
       return;
     }
+
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setStatus("error");
+      return;
+    }
+
     let cancelled = false;
     setStatus("loading");
 
@@ -52,21 +87,24 @@ export function useHerbImage({ wiki, nameLat }) {
       let found = null;
       let creditInfo = null;
 
+      // Wikimedia idzie pierwsza: gorzej wygląda, ale pokazuje właściwy gatunek.
+      // W zielniku, po którym się zbiera, trafność bije urodę.
       try {
-        const unsplash = await fetchUnsplash(nameLat || wiki);
-        if (unsplash.url) {
-          found = unsplash.url;
-          creditInfo = unsplash.credit;
-        }
+        found = await fetchWikimedia(wiki);
+        if (found) creditInfo = { name: "Wikimedia Commons", link: null, zrodlo: "Wikimedia Commons" };
       } catch {
-        // Unsplash zawiódł — próbujemy Wikimedia poniżej
+        found = null;
       }
 
       if (!found) {
         try {
-          found = await fetchWikimedia(wiki);
+          const unsplash = await fetchUnsplash(nameLat || wiki);
+          if (unsplash.url) {
+            found = unsplash.url;
+            creditInfo = { ...unsplash.credit, zrodlo: "Unsplash" };
+          }
         } catch {
-          found = null;
+          // trudno — pokażemy znak zastępczy
         }
       }
 
@@ -80,7 +118,7 @@ export function useHerbImage({ wiki, nameLat }) {
     return () => {
       cancelled = true;
     };
-  }, [cacheKey, wiki, nameLat]);
+  }, [cacheKey, wiki, nameLat, local]);
 
   return { src, credit, status };
 }

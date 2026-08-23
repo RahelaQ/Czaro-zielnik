@@ -45,6 +45,7 @@ export default function HarvestOfMonth({ herbs, onOpen }) {
           >
             <div className="harvest-card-image">
               <HerbImage
+                id={herb.id}
                 title={herb.wiki}
                 namePl={herb.namePl}
                 nameLat={herb.nameLat}

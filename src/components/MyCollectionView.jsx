@@ -107,7 +107,7 @@ export default function MyCollectionView({ herbs, onOpen, collection, onNavigate
               onClick={() => onOpen(herb)}
             >
               <div className="collection-row-image">
-                <HerbImage title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
+                <HerbImage id={herb.id} title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
               </div>
               <div className="collection-row-body">
                 <p className="collection-row-pl">{herb.namePl}</p>
