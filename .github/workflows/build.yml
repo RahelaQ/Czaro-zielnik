@@ -1,0 +1,53 @@
+# Jedyny workflow, jakiego ten projekt potrzebuje.
+#
+# Po co: Vercel buduje z CZYSTEGO `npm ci`, a lokalnie masz już zainstalowane
+# node_modules, które wybaczają konflikty zależności. Dokładnie tak przeszedł
+# niezauważony vite@8.2.2 — działał u Ciebie, wywalił deploy na Vercelu.
+# Ten workflow robi to samo co Vercel, tylko na PR, zanim cokolwiek wejdzie
+# na main.
+#
+# Czego tu NIE ma i nie powinno być: wdrażania. Vercel deployuje z main sam,
+# duplikowanie tego w Actions to dwa źródła prawdy i dwa razy więcej okazji
+# do rozjechania się.
+
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: npm ci + build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # `npm ci`, nie `npm install` — instaluje dokładnie to, co w
+      # package-lock.json, i wywala się przy konflikcie peer zamiast go obejść.
+      # To jest cała wartość tego kroku.
+      - name: Instalacja zależności (czysta, jak na Vercelu)
+        run: npm ci
+
+      - name: Build produkcyjny
+        run: npm run build
+
+      # Bundle idzie do telefonu przez LTE w lesie. Jak nagle spuchnie
+      # dwukrotnie, chcemy to zobaczyć w PR, a nie na sobie w terenie.
+      - name: Rozmiar bundla
+        run: |
+          echo "### Rozmiar po buildzie" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          du -sh dist >> $GITHUB_STEP_SUMMARY
+          find dist/assets -type f \( -name '*.js' -o -name '*.css' \) \
+            -exec sh -c 'printf "%-34s %6s KB  (gzip %4s KB)\n" "$(basename "$1")" \
+              "$(( $(wc -c < "$1") / 1024 ))" "$(( $(gzip -c "$1" | wc -c) / 1024 ))"' _ {} \; \
+            >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import HerbImage from "./HerbImage.jsx";
+import PhotoViewer from "./PhotoViewer.jsx";
 import { useHerbNote } from "../hooks/useHerbNote.js";
 import { HERBS, MONTH_NAMES } from "../data/herbs.js";
 
@@ -13,6 +14,8 @@ function archiveLabel(herb) {
 export default function HerbDetail({ herb, onClose, collection }) {
   const { note, setNote } = useHerbNote(herb.id);
   const [draft, setDraft] = useState(note);
+  // Lista zdjęć otwarta w podglądzie pełnoekranowym (null = zamknięty).
+  const [podglad, setPodglad] = useState(null);
 
   useEffect(() => setDraft(note), [note]);
 
@@ -41,6 +44,7 @@ export default function HerbDetail({ herb, onClose, collection }) {
             namePl={herb.namePl}
             nameLat={herb.nameLat}
             showCredit
+            onOpen={setPodglad}
           />
         </div>
         <div className="detail-body">
@@ -149,6 +153,14 @@ export default function HerbDetail({ herb, onClose, collection }) {
           />
         </div>
       </div>
+
+      {podglad && (
+        <PhotoViewer
+          photos={podglad}
+          herbName={herb.namePl}
+          onClose={() => setPodglad(null)}
+        />
+      )}
     </div>
   );
 }

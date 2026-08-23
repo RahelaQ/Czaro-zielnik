@@ -60,6 +60,41 @@ async function pageImage(title) {
   };
 }
 
+// Wikipedia oddaje jedno zdjęcie główne. Drugi kadr bierzemy z listy
+// ilustracji artykułu — zwykle jest tam zbliżenie kwiatu albo liścia, czyli
+// dokładnie to, czego brakuje na zdjęciu ogólnym przy rozpoznawaniu rośliny.
+// Odsiewamy ikony, herby, mapy zasięgu i loga — to nie są zdjęcia rośliny.
+const SMIECI = /(commons-logo|wiki|icon|logo|map|karte|distribution|range|status|symbol|\.svg$|disambig|question|edit-)/i;
+
+async function pozostaleZdjecia(title, pomin) {
+  const json = await api({
+    action: "query",
+    generator: "images",
+    gimlimit: "30",
+    prop: "imageinfo",
+    iiprop: "url|extmetadata",
+    iiurlwidth: String(THUMB_PX),
+    titles: title,
+  });
+  const strony = json?.query?.pages || [];
+  return strony
+    .filter((p) => /\.(jpe?g|png)$/i.test(p.title) && !SMIECI.test(p.title))
+    .filter((p) => p.title !== pomin)
+    .map((p) => {
+      const info = p.imageinfo?.[0];
+      const meta = info?.extmetadata || {};
+      const strip = (h) => (h ? String(h).replace(/<[^>]*>/g, "").trim() : null);
+      return {
+        tytul: p.title,
+        url: info?.thumburl || info?.url || null,
+        autor: strip(meta.Artist?.value) || "nieznany",
+        licencja: strip(meta.LicenseShortName?.value) || "patrz Commons",
+        zrodlo: info?.descriptionurl || null,
+      };
+    })
+    .filter((z) => z.url);
+}
+
 // Licencja i autor. Bez tego nie wolno tych zdjęć opublikować.
 async function fileCredit(fileTitle) {
   const json = await api({
@@ -119,10 +154,34 @@ for (const herb of targets) {
     await writeFile(dest, Buffer.from(await bin.arrayBuffer()));
 
     const credit = found.file ? await fileCredit(found.file) : {};
-    photos[herb.id] = { plik: `/herbs/${herb.id}.jpg`, ...credit };
+    const lista = [{ plik: `/herbs/${herb.id}.jpg`, ...credit }];
+
+    // Drugi kadr — nieobowiązkowy. Jak się nie uda, pierwszy i tak jest.
+    try {
+      const inne = await pozostaleZdjecia(herb.wiki || herb.namePl, found.file);
+      if (inne[0]) {
+        const drugi = await fetch(inne[0].url, { headers: { "User-Agent": UA } });
+        if (drugi.ok) {
+          await writeFile(`${OUT_DIR}/${herb.id}-2.jpg`, Buffer.from(await drugi.arrayBuffer()));
+          lista.push({
+            plik: `/herbs/${herb.id}-2.jpg`,
+            autor: inne[0].autor,
+            licencja: inne[0].licencja,
+            zrodlo: inne[0].zrodlo,
+          });
+        }
+      }
+    } catch {
+      // drugi kadr to bonus, nie powód do przerywania
+    }
+
+    photos[herb.id] = lista.length > 1 ? { zdjecia: lista } : lista[0];
 
     const kb = Math.round((await bin.headers.get("content-length")) / 1024) || "?";
-    console.log(`  ✓  ${herb.id} — ${kb} KB, ${credit.licencja || "?"}`);
+    console.log(
+      `  ✓  ${herb.id} — ${kb} KB, ${credit.licencja || "?"}` +
+        (lista.length > 1 ? "  (+ drugi kadr)" : "")
+    );
     pobrane++;
 
     // Wikimedia prosi o nieuderzanie zbyt gęsto. To nie jest opcjonalne.
