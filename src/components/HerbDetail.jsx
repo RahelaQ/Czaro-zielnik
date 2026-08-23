@@ -36,6 +36,7 @@ export default function HerbDetail({ herb, onClose, collection }) {
             ×
           </button>
           <HerbImage
+            id={herb.id}
             title={herb.wiki}
             namePl={herb.namePl}
             nameLat={herb.nameLat}
@@ -73,6 +74,36 @@ export default function HerbDetail({ herb, onClose, collection }) {
 
           <p className="section-label">Moc i symbolika</p>
           <p>{herb.moc}</p>
+
+          {/* Jak mocny jest zapis tej tradycji. Bez tego zielnik zrównuje
+              rzecz udokumentowaną u Kolberga z powtarzanką z internetu. */}
+          {herb.zrodlo && <p className="zrodlo-note">Zapis: {herb.zrodlo}</p>}
+
+          {/* Ostrzeżenie o samej roślinie — toksyczność, interakcje z lekami. */}
+          {herb.uwaga && (
+            <div className="warn-box warn-box--plant">
+              <p className="warn-box__label">Uwaga</p>
+              <p>{herb.uwaga}</p>
+            </div>
+          )}
+
+          {/* Sobowtór. To jedyna sekcja w całej appce, która realnie ratuje
+              zdrowie — dlatego jest wyżej niż tabelka botaniczna. */}
+          {herb.sobowtor && (
+            <div className="warn-box warn-box--lookalike">
+              <p className="warn-box__label">Można pomylić z</p>
+              <p className="lookalike-name">
+                {herb.sobowtor.namePl}{" "}
+                <span className="lookalike-lat">{herb.sobowtor.nameLat}</span>
+              </p>
+              <p>
+                <strong>Po czym poznasz:</strong> {herb.sobowtor.jak}
+              </p>
+              <p className="lookalike-risk">
+                <strong>Ryzyko pomyłki:</strong> {herb.sobowtor.ryzyko}
+              </p>
+            </div>
+          )}
 
           {(herb.dzien || herb.zywiol || herb.rodzina) && (
             <div className="info-box">

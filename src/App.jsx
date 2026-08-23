@@ -6,7 +6,10 @@ import IdentifyView from "./components/IdentifyView.jsx";
 import HomeView from "./components/HomeView.jsx";
 import LibraryView from "./components/LibraryView.jsx";
 import MyCollectionView from "./components/MyCollectionView.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import { useMyCollection } from "./hooks/useMyCollection.js";
+import { useTheme } from "./hooks/useTheme.js";
+import { useIdentifyQueue } from "./hooks/useIdentifyQueue.js";
 import { useRecentlyViewed } from "./hooks/useRecentlyViewed.js";
 import { LeafIcon, MoonIcon, CameraIcon } from "./components/Icons.jsx";
 
@@ -15,6 +18,10 @@ export default function App() {
   const [opened, setOpened] = useState(null);
   const collection = useMyCollection();
   const recent = useRecentlyViewed();
+  const theme = useTheme();
+  // Kolejka zyje na poziomie appki, nie zakladki — zdjecie zrobione bez
+  // zasiegu ma sie rozpoznac samo takze wtedy, gdy jestes akurat w Kalendarzu.
+  const queue = useIdentifyQueue();
 
   const herbById = useMemo(
     () => Object.fromEntries(HERBS.map((h) => [h.id, h])),
@@ -66,6 +73,8 @@ export default function App() {
 
   return (
     <div className="app-root">
+      <ThemeToggle preference={theme.preference} onCycle={theme.cycle} />
+
       {tab === "home" && (
         <HomeView
           onOpen={openHerb}
@@ -92,6 +101,7 @@ export default function App() {
 
       {tab === "rozpoznaj" && (
         <IdentifyView
+          queue={queue}
           herbById={herbById}
           onOpenHerb={openHerb}
           onNavigate={setTab}

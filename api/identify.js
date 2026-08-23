@@ -1,23 +1,22 @@
-// Funkcja serverless (Vercel). Rozpoznawanie roślin przez Pl@ntNet API —
-// darmowe do 500 identyfikacji dziennie, bez karty płatniczej, zrobione
-// specjalnie do tego zadania (https://my.plantnet.org/).
+// ---------------------------------------------------------------------------
+// Funkcja serverless (Vercel). Rozpoznawanie roślin przez Pl@ntNet API.
+// Darmowy klucz: https://my.plantnet.org/ → "My API keys".
+// Zmienna środowiskowa: PLANTNET_API_KEY (Vercel → Settings → Environment
+// Variables). Bez niej endpoint zwraca 500 z kodem missing_api_key, który
+// appka pokazuje jako czytelny komunikat, a nie jako "nie udało się".
 //
-// Ustaw zmienną środowiskową PLANTNET_API_KEY w panelu Vercel przed
-// wdrożeniem (Settings → Environment Variables). Klucz zakładasz za darmo
-// na https://my.plantnet.org/ → "My API keys".
+// Dopasowanie idzie trzema stopniami, żeby wynik NIGDY nie był pusty:
+//   1. pełne hasło w zielniku      → karta z tradycją, kalendarzem, ostrzeżeniami
+//   2. indeks rozpoznawczy         → polska nazwa, rodzina, wzmianka o leczeniu
+//   3. sama odpowiedź Pl@ntNet     → łacina i rodzina
+// Wcześniej istniał tylko stopień 1 na trzynastu ziołach, więc praktycznie
+// wszystko wracało bez polskiej nazwy i bez treści.
+// ---------------------------------------------------------------------------
 
 import { HERBS } from "../src/data/herbs.js";
+import { lookupSpecies, normalizeLatin } from "../src/data/speciesIndex.js";
 
-// Pl@ntNet zwraca np. "Matricaria chamomilla L." — nas interesują tylko
-// pierwsze dwa "słowne" człony (rodzaj + gatunek), bez autora taksonu i
-// znaków typu "×".
-function normalizeLatin(name) {
-  if (!name) return "";
-  const words = name
-    .split(/\s+/)
-    .filter((w) => /^[a-zA-ZÀ-ÿ-]+$/.test(w));
-  return words.slice(0, 2).join(" ").toLowerCase();
-}
+const PLANTNET_TIMEOUT_MS = 20000;
 
 function findZielnikMatch(scientificName) {
   const target = normalizeLatin(scientificName);
@@ -27,8 +26,24 @@ function findZielnikMatch(scientificName) {
 
 function confidenceLabel(score) {
   if (score >= 0.5) return "wysoka";
-  if (score >= 0.2) return "srednia";
+  if (score >= 0.2) return "średnia";
   return "niska";
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+function nieRozpoznano(opis) {
+  return {
+    namePl: "Nie rozpoznano",
+    nameLat: "",
+    pewnosc: "niska",
+    opis,
+    ostrzezenie: null,
+    zielnikId: null,
+    zrodloWpisu: "brak",
+  };
 }
 
 export default async function handler(req, res) {
@@ -63,66 +78,116 @@ export default async function handler(req, res) {
       process.env.PLANTNET_API_KEY +
       "&lang=pl&nb-results=3";
 
-    const response = await fetch(url, { method: "POST", body: form });
-    const data = await response.json();
+    // Bez własnego limitu czasu funkcja potrafiła wisieć aż do ścięcia przez
+    // platformę, a telefon w terenie dostawał wtedy stronę błędu zamiast JSON-a.
+    const upstream = AbortSignal.timeout
+      ? AbortSignal.timeout(PLANTNET_TIMEOUT_MS)
+      : undefined;
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: form,
+      signal: upstream,
+    });
+    const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      // Pl@ntNet np. odrzuca zdjęcie, jeśli nie widzi na nim rośliny.
-      console.error("Pl@ntNet error:", data);
-      res.status(200).json({
-        namePl: "Nie rozpoznano",
-        nameLat: "",
-        pewnosc: "niska",
-        opis:
+      console.error("Pl@ntNet error:", response.status, data);
+      res.status(200).json(
+        nieRozpoznano(
           data?.message ||
-          "Nie udało się rozpoznać rośliny na tym zdjęciu. Spróbuj zrobić zdjęcie liścia lub kwiatu z bliska, przy dobrym świetle.",
-        ostrzezenie: null,
-        zielnikId: null,
-      });
+            "Pl@ntNet nie rozpoznał rośliny na tym zdjęciu. Spróbuj sfotografować pojedynczy liść albo kwiat z bliska, na spokojnym tle."
+        )
+      );
       return;
     }
 
-    const top = data.results?.[0];
+    const top = data?.results?.[0];
     if (!top) {
-      res.status(200).json({
-        namePl: "Nie rozpoznano",
-        nameLat: "",
-        pewnosc: "niska",
-        opis: "Pl@ntNet nie znalazł żadnego pasującego gatunku na tym zdjęciu.",
-        ostrzezenie: null,
-        zielnikId: null,
-      });
+      res
+        .status(200)
+        .json(
+          nieRozpoznano(
+            "Pl@ntNet nie znalazł żadnego pasującego gatunku. Najlepiej działa zdjęcie jednego organu — liścia, kwiatu, owocu lub kory — wypełniającego kadr."
+          )
+        );
       return;
     }
 
-    const match = findZielnikMatch(top.species?.scientificNameWithoutAuthor);
-    const pewnosc = confidenceLabel(top.score);
-    const percent = Math.round(top.score * 100);
-    const commonPl = top.species?.commonNames?.[0];
+    const scientific = top.species?.scientificNameWithoutAuthor || "";
+    const family = top.species?.family?.scientificNameWithoutAuthor || null;
+    const percent = Math.round((top.score || 0) * 100);
+    const pewnosc = confidenceLabel(top.score || 0);
 
+    const herb = findZielnikMatch(scientific);
+    const indexed = herb ? null : lookupSpecies(scientific);
+
+    // Drugie trafienie warto pokazać tylko wtedy, gdy naprawdę konkuruje
+    // z pierwszym — inaczej każdy wynik straszy pomyłką bez powodu.
     const second = data.results?.[1];
     const secondNote =
-      second && second.score > top.score * 0.6
+      second && second.score > (top.score || 0) * 0.6
         ? ` Możliwa też pomyłka z ${second.species?.scientificNameWithoutAuthor} (${Math.round(
             second.score * 100
-          )}% pewności).`
+          )}%).`
         : "";
 
+    let namePl;
+    let zrodloWpisu;
+    let opis;
+
+    if (herb) {
+      namePl = herb.namePl;
+      zrodloWpisu = "zielnik";
+      opis = `Rozpoznane z ${percent}% pewnością. To hasło jest w Twoim zielniku — otwórz kartę, żeby zobaczyć kalendarz zbioru i tradycję.${secondNote}`;
+    } else if (indexed) {
+      namePl = capitalize(indexed.namePl);
+      zrodloWpisu = "indeks";
+      const leczniczaNota = indexed.trujaca
+        ? " Roślina notowana jako trująca."
+        : indexed.lecznicza
+          ? " Ma udokumentowane użycie zielarskie, ale nie ma jeszcze pełnego hasła w zielniku."
+          : " Brak wzmianki o użyciu leczniczym.";
+      opis = `Rozpoznane z ${percent}% pewnością (rodzina: ${indexed.rodzina}).${leczniczaNota}${secondNote}`;
+    } else {
+      namePl = top.species?.commonNames?.[0] || scientific;
+      zrodloWpisu = "plantnet";
+      opis = `Rozpoznane z ${percent}% pewnością (rodzina: ${family || "nieznana"}). Tego gatunku nie ma jeszcze w zielniku ani w indeksie.${secondNote}`;
+    }
+
+    // Ostrzeżenia idą kaskadą od najostrzejszego: własne hasło wie najwięcej,
+    // potem indeks, na końcu sama niepewność rozpoznania.
+    let ostrzezenie = null;
+    if (herb?.uwaga) {
+      ostrzezenie = herb.uwaga;
+    } else if (indexed?.trujaca) {
+      ostrzezenie =
+        "Ta roślina jest notowana jako trująca. Nie zbieraj jej i nie stosuj.";
+    } else if (pewnosc !== "wysoka") {
+      ostrzezenie =
+        "Pewność rozpoznania nie jest wysoka — nie zbieraj ani nie stosuj tej rośliny bez potwierdzenia przez doświadczoną osobę lub atlas roślin. Niektóre gatunki mają toksyczne sobowtóry.";
+    }
+
     res.status(200).json({
-      namePl: match?.namePl || commonPl || top.species?.scientificNameWithoutAuthor,
-      nameLat: top.species?.scientificNameWithoutAuthor || "",
+      namePl,
+      nameLat: scientific,
       pewnosc,
-      opis: `Pl@ntNet rozpoznał tę roślinę z ${percent}% pewnością (rodzina: ${
-        top.species?.family?.scientificNameWithoutAuthor || "nieznana"
-      }).${secondNote}`,
-      ostrzezenie:
-        pewnosc === "wysoka"
-          ? null
-          : "Pewność rozpoznania nie jest wysoka — nie zbieraj ani nie stosuj tej rośliny bez potwierdzenia przez doświadczoną osobę lub atlas roślin. Niektóre gatunki mają toksyczne sobowtóry.",
-      zielnikId: match?.id || null,
-      rodzina: top.species?.family?.scientificNameWithoutAuthor || null,
+      procent: percent,
+      opis,
+      ostrzezenie,
+      zielnikId: herb?.id || null,
+      rodzina: herb?.rodzina || indexed?.rodzina || family,
+      lecznicza: herb ? true : indexed?.lecznicza ?? null,
+      trujaca: herb?.trujaca || indexed?.trujaca || false,
+      sobowtor: herb?.sobowtor || null,
+      zrodloWpisu,
     });
   } catch (err) {
+    if (err?.name === "TimeoutError" || err?.name === "AbortError") {
+      console.error("Pl@ntNet timeout");
+      res.status(504).json({ error: "upstream_timeout" });
+      return;
+    }
     console.error("identify.js error:", err);
     res.status(500).json({ error: "identify_failed" });
   }

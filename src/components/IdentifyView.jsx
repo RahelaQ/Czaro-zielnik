@@ -1,59 +1,106 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { compressForUpload } from "../utils/image.js";
+import { getCoords } from "../utils/db.js";
+import {
+  identifyPlant,
+  IdentifyError,
+  ERROR_COPY,
+  RETRYABLE,
+} from "../utils/identifyClient.js";
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// Etapy pokazywane po kolei, żeby było widać, że coś się dzieje. Bez tego
+// pierwsze sekundy wyglądają jak zawieszenie i człowiek klika drugi raz.
+const STAGE_TEXT = {
+  compress: "Przygotowuję zdjęcie...",
+  upload: "Wysyłam do rozpoznania...",
+  wait: "Przyglądam się roślinie...",
+};
+
+function formatKb(bytes) {
+  return `${Math.round(bytes / 1024)} KB`;
 }
 
-async function identifyPlant(base64, mediaType) {
-  // Woła NASZ backend (api/identify.js), a nie bezpośrednio api.anthropic.com —
-  // dzięki temu klucz API nigdy nie trafia do przeglądarki/telefonu.
-  const response = await fetch("/api/identify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: base64, mediaType }),
-  });
-  if (!response.ok) throw new Error("identify_failed");
-  return response.json();
-}
-
-export default function IdentifyView({ herbById, onOpenHerb, onNavigate, collection }) {
+export default function IdentifyView({
+  herbById,
+  onOpenHerb,
+  onNavigate,
+  collection,
+  queue,
+}) {
   const [preview, setPreview] = useState(null);
-  const [status, setStatus] = useState("idle"); // idle | loading | done | error
+  const [stage, setStage] = useState(null); // compress | upload | wait | null
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null); // { kind, queued }
+  const [stats, setStats] = useState(null);
   const [justAdded, setJustAdded] = useState(false);
+  const abortRef = useRef(null);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  const reset = () => {
+    setResult(null);
+    setError(null);
+    setJustAdded(false);
+    setStats(null);
+  };
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // żeby dało się wybrać to samo zdjęcie drugi raz
     if (!file) return;
-    setStatus("loading");
-    setResult(null);
-    setJustAdded(false);
+
+    reset();
+    setStage("compress");
+
+    let shot;
     try {
-      const base64 = await fileToBase64(file);
-      setPreview(`data:${file.type};base64,${base64}`);
-      const parsed = await identifyPlant(base64, file.type || "image/jpeg");
+      shot = await compressForUpload(file);
+    } catch {
+      setStage(null);
+      setError({ kind: "too_large", queued: false });
+      return;
+    }
+
+    // Podgląd robimy ze skompresowanego pliku — ładuje się natychmiast
+    // i nie trzyma w pamięci pięciu megabajtów oryginału.
+    setPreview(URL.createObjectURL(shot.blob));
+    setStats({ before: shot.bytesBefore, after: shot.bytesAfter });
+
+    // Pozycja przyda się, gdy zdjęcie pójdzie do kolejki: chcesz wiedzieć,
+    // gdzie wrócić po zbiór. Nigdzie jej nie wysyłamy.
+    const coords = await getCoords();
+
+    setStage("upload");
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      setStage("wait");
+      const parsed = await identifyPlant({
+        base64: shot.base64,
+        mediaType: shot.mediaType,
+        signal: controller.signal,
+      });
       setResult(parsed);
-      setStatus("done");
+      setStage(null);
+      queue?.remember({ blob: shot.blob, coords, result: parsed });
     } catch (err) {
-      setStatus("error");
+      const kind = err instanceof IdentifyError ? err.kind : "server";
+      const canQueue = RETRYABLE.has(kind);
+      if (canQueue) await queue?.enqueue({ blob: shot.blob, coords });
+      setStage(null);
+      setError({ kind, queued: canQueue });
     }
   };
 
   const matched = result?.zielnikId ? herbById[result.zielnikId] : null;
   const alreadySaved = matched ? collection.isSaved(matched.id) : false;
   const savedNow = alreadySaved || justAdded;
+  const pendingCount = queue?.pending?.length || 0;
 
   const handleAdd = () => {
-    if (matched) {
-      collection.addFromLibrary(matched);
-    } else if (result) {
-      collection.addCustom(result);
-    }
+    if (matched) collection.addFromLibrary(matched);
+    else if (result) collection.addCustom(result);
     setJustAdded(true);
   };
 
@@ -66,6 +113,24 @@ export default function IdentifyView({ herbById, onOpenHerb, onNavigate, collect
         </div>
       </div>
 
+      {pendingCount > 0 && (
+        <div className="queue-banner">
+          <span className="queue-banner__dot" />
+          <div>
+            <strong>
+              {pendingCount === 1
+                ? "1 zdjęcie czeka na rozpoznanie"
+                : `${pendingCount} zdjęcia czekają na rozpoznanie`}
+            </strong>
+            <p>
+              {queue?.isSyncing
+                ? "Rozpoznaję je teraz..."
+                : "Rozpoznam je automatycznie, gdy wróci zasięg."}
+            </p>
+          </div>
+        </div>
+      )}
+
       <label className="upload-area">
         <span className="upload-corner upload-corner--tl" />
         <span className="upload-corner upload-corner--tr" />
@@ -77,7 +142,7 @@ export default function IdentifyView({ herbById, onOpenHerb, onNavigate, collect
           <>
             <span className="upload-plus">+</span>
             <span className="upload-text-main">Aparat / galeria</span>
-            <span className="upload-text-sub">📷 Aparat &nbsp;·&nbsp; 🖼️ Galeria</span>
+            <span className="upload-text-sub">Aparat &nbsp;·&nbsp; Galeria</span>
           </>
         )}
         <input
@@ -89,18 +154,40 @@ export default function IdentifyView({ herbById, onOpenHerb, onNavigate, collect
         />
       </label>
 
-      {status === "loading" && (
-        <p className="empty-note">Przyglądam się roślinie...</p>
+      {stage && (
+        <div className="id-progress">
+          <span className="id-progress__spinner" />
+          <span>{STAGE_TEXT[stage]}</span>
+        </div>
       )}
 
-      {status === "error" && (
-        <p className="empty-note">
-          Nie udało się rozpoznać zdjęcia. Spróbuj jeszcze raz, najlepiej przy
-          dobrym świetle i z liśćmi/kwiatem w kadrze.
+      {stats && !stage && (
+        <p className="id-stats">
+          Zdjęcie zmniejszone z {formatKb(stats.before)} do {formatKb(stats.after)} przed wysłaniem.
         </p>
       )}
 
-      {status === "done" && result && (
+      {error && (
+        <div className="id-error">
+          <strong>{ERROR_COPY[error.kind]?.title || "Nie udało się"}</strong>
+          <p>
+            {ERROR_COPY[error.kind]?.body ||
+              "Spróbuj jeszcze raz, najlepiej przy dobrym świetle i z liściem lub kwiatem w kadrze."}
+          </p>
+          <div className="id-error__actions">
+            {error.queued && (
+              <button className="btn-outline" onClick={() => queue?.flush()}>
+                Spróbuj teraz
+              </button>
+            )}
+            <button className="btn-outline" onClick={() => onNavigate("biblioteka")}>
+              Szukaj w bibliotece
+            </button>
+          </div>
+        </div>
+      )}
+
+      {result && (
         <div className="id-result">
           <p className="section-label" style={{ margin: "0 0 0.6rem" }}>
             Najbliższe dopasowanie
@@ -118,13 +205,23 @@ export default function IdentifyView({ herbById, onOpenHerb, onNavigate, collect
               )}
             </div>
 
-            <p style={{ margin: "0.8rem 0 0", color: "var(--text-body)", fontSize: "0.85rem", lineHeight: 1.55 }}>
+            <p
+              style={{
+                margin: "0.8rem 0 0",
+                color: "var(--text-body)",
+                fontSize: "0.85rem",
+                lineHeight: 1.55,
+              }}
+            >
               {result.opis}
             </p>
 
             {result.ostrzezenie && (
-              <div className="kupala-note" style={{ margin: "0.9rem 0 0", background: "var(--bg-surface)" }}>
-                ⚠️ {result.ostrzezenie} Nigdy nie jedz ani nie stosuj rośliny na
+              <div
+                className="kupala-note"
+                style={{ margin: "0.9rem 0 0", background: "var(--bg-surface)" }}
+              >
+                {result.ostrzezenie} Nigdy nie jedz ani nie stosuj rośliny na
                 podstawie samego rozpoznania ze zdjęcia — skonsultuj się z
                 doświadczonym zbieraczem lub atlasem roślin.
               </div>
