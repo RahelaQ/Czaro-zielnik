@@ -4,7 +4,7 @@ import { HERBS } from "../data/herbs.js";
 
 // Biblioteka = wszystkie rośliny, które appka "zna" — referencyjna, statyczna.
 // Niezależna od Moich Zbiorów (to, co użytkowniczka faktycznie dodała).
-const CATEGORIES = ["Wszystkie", "Kwiaty", "Liście", "Ziele", "Korzenie", "Kora", "Owoce"];
+const CATEGORIES = ["Wszystkie", "Kwiaty", "Liście", "Ziele", "Korzenie", "Kora", "Owoce", "Trujące"];
 
 export default function LibraryView({ onOpen, collection }) {
   const [query, setQuery] = useState("");
@@ -16,10 +16,15 @@ export default function LibraryView({ onOpen, collection }) {
     return HERBS.filter((h) => {
       if (category !== "Wszystkie" && h.kategoria !== category) return false;
       if (!q) return true;
+      // Szukamy też po sobowtórze — stojąc nad rośliną, której nie znasz,
+      // częściej pamiętasz nazwę tej trującej, z którą ją mylisz.
       return (
         h.namePl.toLowerCase().includes(q) ||
         h.nameLat.toLowerCase().includes(q) ||
-        h.moc.toLowerCase().includes(q)
+        h.moc.toLowerCase().includes(q) ||
+        (h.rodzina || "").toLowerCase().includes(q) ||
+        (h.sobowtor?.namePl || "").toLowerCase().includes(q) ||
+        (h.sobowtor?.nameLat || "").toLowerCase().includes(q)
       );
     });
   }, [query, category]);
@@ -29,7 +34,7 @@ export default function LibraryView({ onOpen, collection }) {
       <div className="screen-header">
         <div>
           <h1>Zielnik</h1>
-          <p>{HERBS.length} kart botanicznych</p>
+          <p>{HERBS.length} kart botanicznych · działa bez zasięgu</p>
         </div>
         <div className="avatar-dot" aria-hidden>
           🌿

@@ -11,7 +11,7 @@ export default function HerbCard({
   return (
     <div className="herb-card">
       <button className="herb-card-main" onClick={() => onOpen(herb)}>
-        <HerbImage title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
+        <HerbImage id={herb.id} title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
         {activeThisMonth && <span className="badge-now">zbiór teraz</span>}
         {inCollection && <span className="badge-saved">moje zbiory</span>}
         <div className="herb-card-text">

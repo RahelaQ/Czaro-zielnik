@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 :root {
   /* --- CZARO Zielnik — Nordic Linen (light) / Forest Green (dark) --- */
@@ -30,7 +29,7 @@
 
 /* --- Automatic dark mode based on device preference --- */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg-page: #313531;          /* tlo aplikacji (projekt: #626A62) */
     --bg-surface: #59615A;       /* karty i powierzchnie */
     --bg-image: #6E7A6E;         /* placeholdery zdjec */
@@ -54,7 +53,10 @@
 }
 
 /* --- Dark "Pine Smoke" scope — consistent across all screens --- */
-.theme-dark {
+/* .theme-dark zostaje dla zgodnosci; [data-theme="dark"] to reczny
+   przelacznik, ktory wygrywa z ustawieniem systemowym. */
+.theme-dark,
+:root[data-theme="dark"] {
   --bg-page: #313531;          /* tlo aplikacji (projekt: #626A62) */
   --bg-surface: #59615A;       /* karty i powierzchnie */
   --bg-image: #6E7A6E;         /* placeholdery zdjec */
@@ -996,3 +998,192 @@ body { background: var(--bg-page); }
   margin-top: 0.6rem;
   flex-wrap: wrap;
 }
+/* ==========================================================================
+   PRZELACZNIK MOTYWU
+   ========================================================================== */
+
+.theme-toggle {
+  position: fixed;
+  top: max(0.9rem, env(safe-area-inset-top));
+  right: 0.9rem;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--icon-stroke);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:active { transform: scale(0.94); }
+
+/* ==========================================================================
+   ROZPOZNAWANIE — postep, kolejka, bledy
+   ========================================================================== */
+
+.id-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  color: var(--text-body);
+  font-size: 0.88rem;
+}
+
+.id-progress__spinner {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 2px solid var(--border-dashed);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: czaro-spin 0.8s linear infinite;
+}
+
+@keyframes czaro-spin { to { transform: rotate(360deg); } }
+
+/* Osoby z wlaczonym "ogranicz ruch" dostaja pulsowanie zamiast wirowania. */
+@media (prefers-reduced-motion: reduce) {
+  .id-progress__spinner {
+    animation: czaro-pulse 1.4s ease-in-out infinite;
+    border-top-color: var(--border-dashed);
+    background: var(--accent);
+  }
+  @keyframes czaro-pulse { 50% { opacity: 0.35; } }
+}
+
+.id-stats {
+  margin: 0.8rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.queue-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.queue-banner__dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 0.4rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: czaro-pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes czaro-pulse-dot { 50% { opacity: 0.3; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .queue-banner__dot { animation: none; }
+}
+
+.queue-banner strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 0.86rem;
+}
+
+.queue-banner p {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.id-error {
+  margin: 1rem 0 0;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.id-error strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 0.92rem;
+}
+
+.id-error p {
+  margin: 0.35rem 0 0;
+  color: var(--text-body);
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+
+.id-error__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+/* ==========================================================================
+   OSTRZEZENIA I SOBOWTORY
+   ========================================================================== */
+
+.zrodlo-note {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.warn-box {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+}
+
+.warn-box p {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-body);
+}
+
+.warn-box__label {
+  margin: 0 !important;
+  font-size: 0.68rem !important;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Roslina sama w sobie ryzykowna — interakcje, toksycznosc. */
+.warn-box--plant { border-left: 3px solid #B4703C; }
+
+/* Sobowtor — najwazniejsza sekcja w calej appce. */
+.warn-box--lookalike { border-left: 3px solid #9A3B3B; }
+
+.lookalike-name {
+  font-weight: 600;
+  color: var(--text-main) !important;
+}
+
+.lookalike-lat {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.lookalike-risk { color: var(--text-main) !important; }

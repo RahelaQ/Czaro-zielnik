@@ -5,9 +5,16 @@ import { HERBS } from "../data/herbs.js";
 
 // Stabilne w ciągu dnia (liczone od epoki), zmienia się raz na dobę o północy —
 // każdego dnia inne zioło, ale bez losowości przy każdym odświeżeniu appki.
+//
+// Rośliny trujące są wyłączone z tej rotacji. Hasła w rodzaju barszczu
+// Sosnowskiego czy szczwołu istnieją po to, żeby je ROZPOZNAĆ i ominąć —
+// witanie nimi użytkowniczki jako "ziołem dnia" jest dokładnie odwrotnym
+// komunikatem, niż appka ma nadawać.
+const HERBS_DNIA = HERBS.filter((h) => !h.trujaca);
+
 function herbOfTheDay() {
   const dayIndex = Math.floor(Date.now() / 86400000);
-  return HERBS[dayIndex % HERBS.length];
+  return HERBS_DNIA[dayIndex % HERBS_DNIA.length];
 }
 
 export default function HomeView({ onOpen, onNavigate, collectionCount, recentHerbs }) {
@@ -33,7 +40,7 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
           </button>
         </div>
         <div className="hero-card-image">
-          <HerbImage title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
+          <HerbImage id={herb.id} title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
         </div>
       </div>
 
@@ -109,7 +116,7 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
                 onClick={() => onOpen(h)}
               >
                 <div className="recent-card-image">
-                  <HerbImage title={h.wiki} namePl={h.namePl} nameLat={h.nameLat} />
+                  <HerbImage id={h.id} title={h.wiki} namePl={h.namePl} nameLat={h.nameLat} />
                 </div>
                 <div>
                   <p className="recent-card-pl">{h.namePl}</p>

@@ -1,8 +1,8 @@
 import React from "react";
 import { useHerbImage } from "../hooks/useHerbImage.js";
 
-export default function HerbImage({ title, namePl, nameLat, showCredit }) {
-  const { src, credit, status } = useHerbImage({ wiki: title, nameLat });
+export default function HerbImage({ id, title, namePl, nameLat, showCredit }) {
+  const { src, credit, status } = useHerbImage({ id, wiki: title, nameLat });
 
   if (status === "loading") {
     return (
@@ -21,16 +21,25 @@ export default function HerbImage({ title, namePl, nameLat, showCredit }) {
   return (
     <div className="herb-photo">
       <img src={src} alt={namePl} loading="lazy" />
+      {/* Licencje Commons wymagaja podania autora — to nie jest ozdobnik. */}
       {showCredit && credit?.name && (
-        <a
-          className="photo-credit"
-          href={credit.link}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-        >
-          zdjęcie: {credit.name} / Unsplash
-        </a>
+        credit.link ? (
+          <a
+            className="photo-credit"
+            href={credit.link}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            zdjęcie: {credit.name}
+            {credit.licencja ? ` (${credit.licencja})` : ""} / {credit.zrodlo}
+          </a>
+        ) : (
+          <span className="photo-credit">
+            zdjęcie: {credit.name}
+            {credit.licencja ? ` (${credit.licencja})` : ""}
+          </span>
+        )
       )}
     </div>
   );
