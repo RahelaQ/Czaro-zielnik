@@ -53,3 +53,37 @@ export function AutoThemeIcon(props) {
     </svg>
   );
 }
+
+// Koszyk zbieracza — wiklinowy, z pałąkiem. Do "Moich zbiorów".
+export function BasketIcon(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M3 9h18l-1.6 9.2a2 2 0 0 1-2 1.8H6.6a2 2 0 0 1-2-1.8L3 9z" />
+      <path d="M8.5 9 12 3.5 15.5 9" />
+      <path d="M9 12.5v4M15 12.5v4" />
+    </svg>
+  );
+}
+
+// Kalendarz z księżycem — appka liczy zbiory i fazy naraz.
+export function CalendarIcon(props) {
+  return (
+    <svg {...common} {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2.5" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+      <path d="M16 16.5a2.6 2.6 0 1 1-3-3.4 3.2 3.2 0 0 0 3 3.4z" />
+    </svg>
+  );
+}
+
+// Stos zdjęć — wybór z biblioteki zdjęć telefonu.
+export function GalleryIcon(props) {
+  return (
+    <svg {...common} {...props}>
+      <rect x="7" y="3.5" width="14" height="14" rx="2.5" />
+      <circle cx="11.5" cy="8" r="1.4" />
+      <path d="M21 13.5 17 10l-6 5.5" />
+      <path d="M17 20.5H5.5A2.5 2.5 0 0 1 3 18V6.5" />
+    </svg>
+  );
+}

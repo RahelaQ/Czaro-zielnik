@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import HerbCard from "./HerbCard.jsx";
 import { HERBS, MONTH_NAMES } from "../data/herbs.js";
 import { moonPhase } from "../utils/moonPhase.js";
+import MoonPhase from "./MoonPhase.jsx";
 
 export default function CalendarView({ onOpen }) {
   const currentMonth = new Date().getMonth() + 1;
@@ -10,6 +11,15 @@ export default function CalendarView({ onOpen }) {
   const inSeason = HERBS.filter((h) => h.months.includes(selected));
   const isKupala = selected === 6;
   const phase = moonPhase();
+
+  // Najbliższy tydzień księżyca. W zielarstwie termin zbioru wiąże się
+  // z fazą, więc widok siedmiu dni naraz jest praktyczny, nie ozdobny.
+  const today = new Date();
+  const tydzien = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    return { data: d, faza: moonPhase(d), dzis: i === 0 };
+  });
 
   return (
     <div className="calendar-view">
@@ -32,14 +42,27 @@ export default function CalendarView({ onOpen }) {
           </p>
           <p className="moon-card-sub">Czas wzrostu i nastawiania</p>
         </div>
-        <div
+        <MoonPhase
+          fraction={phase.fraction}
+          size={64}
           className="moon-dial"
-          style={{
-            background: `conic-gradient(#CD9DA2 ${Math.round(
-              phase.fraction * 360
-            )}deg, var(--bg-image) 0deg)`,
-          }}
+          title={phase.name}
         />
+      </div>
+
+      <div className="moon-strip">
+        {tydzien.map(({ data, faza, dzis }) => (
+          <div
+            key={data.toISOString()}
+            className={"moon-strip__day" + (dzis ? " moon-strip__day--today" : "")}
+            title={`${data.toLocaleDateString("pl-PL")} — ${faza.name}`}
+          >
+            <MoonPhase fraction={faza.fraction} size={30} />
+            <span className="moon-strip__label">
+              {dzis ? "dziś" : data.toLocaleDateString("pl-PL", { weekday: "short" })}
+            </span>
+          </div>
+        ))}
       </div>
 
       <div className="month-scroller">

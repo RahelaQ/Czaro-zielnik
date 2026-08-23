@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { compressForUpload } from "../utils/image.js";
+import { CameraIcon, GalleryIcon } from "./Icons.jsx";
 import { getCoords } from "../utils/db.js";
 import {
   identifyPlant,
@@ -131,6 +132,12 @@ export default function IdentifyView({
         </div>
       )}
 
+      {/*
+        Dwa OSOBNE pola, nie jedno. Atrybut capture="environment" na iOS nie
+        jest podpowiedzia — on wymusza aparat i CALKOWICIE usuwa wybor
+        "Biblioteka zdjec". Dlatego wczesniej nie dalo sie wgrac zdjecia
+        zrobionego wczesniej. Pole bez capture otwiera galerie normalnie.
+      */}
       <label className="upload-area">
         <span className="upload-corner upload-corner--tl" />
         <span className="upload-corner upload-corner--tr" />
@@ -140,15 +147,30 @@ export default function IdentifyView({
           <img src={preview} alt="Twoje zdjęcie" className="upload-preview" />
         ) : (
           <>
-            <span className="upload-plus">+</span>
-            <span className="upload-text-main">Aparat / galeria</span>
-            <span className="upload-text-sub">Aparat &nbsp;·&nbsp; Galeria</span>
+            <span className="upload-icon">
+              <CameraIcon width="30" height="30" />
+            </span>
+            <span className="upload-text-main">Zrób zdjęcie</span>
+            <span className="upload-text-sub">
+              Liść, kwiat albo kora — jeden organ, blisko, na spokojnym tle
+            </span>
           </>
         )}
         <input
           type="file"
           accept="image/*"
           capture="environment"
+          onChange={handleFile}
+          style={{ display: "none" }}
+        />
+      </label>
+
+      <label className="upload-alt">
+        <GalleryIcon width="18" height="18" />
+        <span>{preview ? "Wybierz inne zdjęcie z galerii" : "Wybierz z galerii"}</span>
+        <input
+          type="file"
+          accept="image/*"
           onChange={handleFile}
           style={{ display: "none" }}
         />

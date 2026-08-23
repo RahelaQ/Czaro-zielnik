@@ -36,9 +36,6 @@ export default function LibraryView({ onOpen, collection }) {
           <h1>Zielnik</h1>
           <p>{HERBS.length} kart botanicznych · działa bez zasięgu</p>
         </div>
-        <div className="avatar-dot" aria-hidden>
-          🌿
-        </div>
       </div>
 
       <input

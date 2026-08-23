@@ -740,12 +740,50 @@ body { background: var(--bg-page); }
   line-height: 1.15;
 }
 .moon-card-sub { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+/* Tarcza rysuje sie teraz w SVG (MoonPhase.jsx), wiec zadnego tla ani
+   obwodki z CSS — kolor bierze z currentColor, ksztalt z geometrii. */
 .moon-dial {
   flex: none;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 1.5px solid var(--accent-pink);
+  color: var(--accent);
+}
+
+/* Tydzien ksiezyca — pasek faz na najblizsze siedem dni. */
+.moon-strip {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0 1.4rem 0.9rem;
+  margin-top: -0.5rem;
+  scrollbar-width: none;
+}
+.moon-strip::-webkit-scrollbar { display: none; }
+
+.moon-strip__day {
+  flex: 1 0 auto;
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.2rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.moon-strip__day--today {
+  background: var(--bg-surface);
+  color: var(--accent);
+}
+
+.moon-strip__label {
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.moon-strip__day--today .moon-strip__label {
+  font-weight: 600;
+  color: var(--text-main);
 }
 
 .month-scroller {
@@ -819,22 +857,38 @@ body { background: var(--bg-page); }
   top: 20px; left: 20px;
   font: 600 0.6rem ui-monospace, Menlo, monospace;
   letter-spacing: 0.18em;
-  color: rgba(242, 238, 228, 0.8);
+  color: rgba(242, 238, 228, 0.85);
+  /* Ta etykieta tez lezy na zdjeciu — na jasnym kadrze albo na beżowym
+     placeholderze w light mode gubila sie tak samo jak krzyzyk. Cien
+     zamiast zmiennej motywu, bo tlo jest nieprzewidywalne. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
   z-index: 2;
 }
+/* Ten przycisk lezy NA ZDJECIU, a nie na tle strony, wiec nie moze brac
+   koloru z --text-main: w dark mode --text-main jest kremowy, a tlo guzika
+   bylo kremowe na sztywno — krem na kremie, przycisk znikal.
+   Ciemny krazek z jasnym znakiem czyta sie na kazdym zdjeciu i w obu
+   motywach, bo nie zalezy od motywu w ogole. */
 .close-btn {
   position: absolute;
   top: 16px; right: 18px;
-  background: rgba(242, 238, 228, 0.92);
-  color: var(--text-main);
-  border: none;
+  display: grid;
+  place-items: center;
+  background: rgba(38, 44, 40, 0.62);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #F7F4EC;
+  border: 1px solid rgba(247, 244, 236, 0.3);
   width: 2.1rem; height: 2.1rem;
   border-radius: 50%;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   line-height: 1;
+  padding: 0 0 2px;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
+  -webkit-tap-highlight-color: transparent;
 }
+.close-btn:active { transform: scale(0.93); }
 .detail-body {
   padding: 1.35rem 1.3rem 1.6rem;
   background: var(--bg-page);
@@ -1004,11 +1058,11 @@ body { background: var(--bg-page); }
 
 .theme-toggle {
   position: fixed;
-  top: max(0.9rem, env(safe-area-inset-top));
-  right: 0.9rem;
+  top: calc(1.2rem + env(safe-area-inset-top));
+  right: 1.4rem;
   z-index: 40;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -1187,3 +1241,34 @@ body { background: var(--bg-page); }
 }
 
 .lookalike-risk { color: var(--text-main) !important; }
+
+/* Ikona w polu robienia zdjecia — zastapila znak "+", ktory nie mowil,
+   ze chodzi o aparat. */
+.upload-icon {
+  display: grid;
+  place-items: center;
+  color: var(--icon-stroke);
+  margin-bottom: 0.55rem;
+}
+
+/* Drugie wejscie: galeria zdjec telefonu. Osobne pole, bo iOS przy
+   capture="environment" w ogole nie pokazuje biblioteki. */
+.upload-alt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0.7rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-body);
+  font: 500 0.85rem 'Inter', sans-serif;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.upload-alt:active { transform: scale(0.99); }
+.upload-alt svg { flex: none; color: var(--icon-stroke); }
