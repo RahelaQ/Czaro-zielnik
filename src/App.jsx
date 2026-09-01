@@ -11,7 +11,24 @@ import { useMyCollection } from "./hooks/useMyCollection.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useIdentifyQueue } from "./hooks/useIdentifyQueue.js";
 import { useRecentlyViewed } from "./hooks/useRecentlyViewed.js";
-import { LeafIcon, MoonIcon, CameraIcon } from "./components/Icons.jsx";
+import {
+  LeafIcon,
+  BookIcon,
+  MoonIcon,
+  CameraIcon,
+} from "./components/Icons.jsx";
+
+// Cztery zakladki zamiast trzech. Biblioteka — czyli wszystkie hasla — dawala
+// sie otworzyc wylacznie z ekranu glownego, choc jest sercem tej appki.
+// Moje Zbiory zostaja kaflem na ekranie glownym: siega sie po nie po powrocie
+// do domu, nie stojac nad roslina, wiec nie musza zabierac miejsca w pasku.
+// Kolejnosc idzie za uzyciem: co dzis > wszystko > kiedy zbierac > co to jest.
+const TABS = [
+  { id: "home", label: "Zielnik", Icon: LeafIcon },
+  { id: "biblioteka", label: "Biblioteka", Icon: BookIcon },
+  { id: "kalendarz", label: "Kalendarz", Icon: MoonIcon },
+  { id: "rozpoznaj", label: "Rozpoznaj", Icon: CameraIcon },
+];
 
 export default function App() {
   const [tab, setTab] = useState("home");
@@ -110,31 +127,17 @@ export default function App() {
       )}
 
       <nav className="tab-bar">
-        <button
-          className={tab === "home" ? "tab-btn tab-btn--active" : "tab-btn"}
-          onClick={() => setTab("home")}
-        >
-          <LeafIcon />
-          <span>Zielnik</span>
-        </button>
-        <button
-          className={
-            tab === "kalendarz" ? "tab-btn tab-btn--active" : "tab-btn"
-          }
-          onClick={() => setTab("kalendarz")}
-        >
-          <MoonIcon />
-          <span>Kalendarz</span>
-        </button>
-        <button
-          className={
-            tab === "rozpoznaj" ? "tab-btn tab-btn--active" : "tab-btn"
-          }
-          onClick={() => setTab("rozpoznaj")}
-        >
-          <CameraIcon />
-          <span>Rozpoznaj</span>
-        </button>
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            className={tab === id ? "tab-btn tab-btn--active" : "tab-btn"}
+            onClick={() => setTab(id)}
+            aria-current={tab === id ? "page" : undefined}
+          >
+            <Icon />
+            <span>{label}</span>
+          </button>
+        ))}
       </nav>
 
       {opened && (

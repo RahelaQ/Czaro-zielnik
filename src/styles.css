@@ -685,40 +685,71 @@ body { background: var(--bg-page); }
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 0.15rem;
   background: var(--tabbar-bg);
   border-radius: 33px;
   padding: 0.5rem;
   box-shadow: var(--shadow-float);
   z-index: 20;
 }
+/* Piec zakladek zamiast trzech, wiec kazda dostaje mniej miejsca: mniejszy
+   font, ciasniejszy padding, `min-width: 0` zeby flex mogl je scisnac
+   zamiast rozpychac pasek poza ekran. */
 .tab-btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0.55rem 0.3rem;
+  gap: 0.22rem;
+  padding: 0.5rem 0.12rem;
   background: none;
   border: none;
   border-radius: 22px;
   color: var(--tabbar-inactive);
   font-family: 'Inter', sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 500;
   cursor: pointer;
 }
-.tab-btn svg { width: 16px; height: 16px; }
+.tab-btn svg { flex: none; width: 16px; height: 16px; }
+
+/* Podpis nigdy nie lamie sie na dwie linie — pasek ma stala wysokosc.
+   Gdy zabraknie miejsca, wygasa, zamiast rozpychac sasiadow. */
+.tab-btn span {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+/* Aktywna zakladka rozwija sie w poziom i bierze DOKLADNIE tyle miejsca, ile
+   potrzebuje jej podpis: `flex: 0 0 auto`, czyli ani nie rosnie, ani nie maleje.
+   Z `flex-grow` wieksza od reszty zabierala polowe paska i przycinala podpisy
+   sasiadow — reszta ma sie dzielic tym, co zostanie, po rowno. */
 .tab-btn--active {
+  flex: 0 0 auto;
   flex-direction: row;
-  gap: 0.45rem;
+  gap: 0.4rem;
   background: var(--tabbar-active-bg);
   color: var(--tabbar-active-text);
   font-weight: 600;
-  font-size: 0.72rem;
-  padding: 0.6rem 0.95rem;
+  font-size: 0.68rem;
+  padding: 0.55rem 0.7rem;
+}
+
+/* Na najwezszych telefonach (iPhone SE pierwszej generacji, 320 px) cztery
+   podpisy naraz sie nie mieszcza. Prog zmierzony na zbudowanej appce: przy
+   320 px pasek potrzebuje 267 px, a ma 253 — brakuje czternastu; od okolo
+   336 px starcza. 349 zostawia zapas na to, ze Inter na iOS rysuje sie
+   odrobine szerzej niz w Chromium, w ktorym mierzylam.
+   Ponizej progu nieaktywne zostaja samymi ikonami — aktywna i tak mowi,
+   gdzie jestes, a to lepsze niz pasek uciekajacy poza ekran. */
+@media (max-width: 349px) {
+  .tab-btn:not(.tab-btn--active) span { display: none; }
+  .tab-btn:not(.tab-btn--active) { padding: 0.6rem 0.1rem; }
 }
 
 /* ------------------------------------------------------------ Calendar */

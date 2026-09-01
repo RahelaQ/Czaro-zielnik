@@ -87,3 +87,15 @@ export function GalleryIcon(props) {
     </svg>
   );
 }
+
+// Ksiega — pelny spis hasel. Grzbiet po lewej i dwie linie tekstu, zeby nie
+// mylila sie z kalendarzem, ktory tez jest prostokatem.
+export function BookIcon(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M5 4.2A1.2 1.2 0 0 1 6.2 3H19v18H6.2A1.2 1.2 0 0 1 5 19.8z" />
+      <path d="M9 3v18" />
+      <path d="M12.3 8h3.6M12.3 11.5h3.6" />
+    </svg>
+  );
+}
