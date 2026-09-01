@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HERB_PHOTOS } from "../data/herbPhotos.js";
 
 // ---------------------------------------------------------------------------
@@ -18,6 +18,26 @@ import { HERB_PHOTOS } from "../data/herbPhotos.js";
 // ---------------------------------------------------------------------------
 
 const imageCache = new Map();
+
+// HERB_PHOTOS[id] moze byc pojedynczym zdjeciem albo lista. Oba zapisy sa
+// poprawne, zeby dorzucenie drugiego zdjecia nie wymagalo przepisywania
+// calego pliku danych — wystarczy zamienic obiekt na { zdjecia: [...] }.
+function zdjeciaWbudowane(id) {
+  const wpis = id ? HERB_PHOTOS[id] : null;
+  if (!wpis) return [];
+  const lista = Array.isArray(wpis) ? wpis : wpis.zdjecia || [wpis];
+  return lista
+    .filter((z) => z && z.plik)
+    .map((z) => ({
+      src: z.plik,
+      credit: {
+        name: z.autor,
+        link: z.zrodlo,
+        licencja: z.licencja,
+        zrodlo: "Wikimedia Commons",
+      },
+    }));
+}
 
 async function fetchWikimedia(title) {
   const url =
@@ -41,28 +61,20 @@ async function fetchUnsplash(query) {
 }
 
 export function useHerbImage({ id, wiki, nameLat }) {
-  const local = id ? HERB_PHOTOS[id] : null;
+  const wbudowane = useMemo(() => zdjeciaWbudowane(id), [id]);
+  const local = wbudowane[0] || null;
   const cacheKey = `${id || ""}|${wiki}|${nameLat || ""}`;
   const cached = imageCache.get(cacheKey);
 
-  const [src, setSrc] = useState(local?.plik || cached?.src);
-  const [credit, setCredit] = useState(
-    local
-      ? { name: local.autor, link: local.zrodlo, licencja: local.licencja, zrodlo: "Wikimedia Commons" }
-      : cached?.credit ?? null
-  );
+  const [src, setSrc] = useState(local?.src || cached?.src);
+  const [credit, setCredit] = useState(local?.credit ?? cached?.credit ?? null);
   const [status, setStatus] = useState(local || cached ? "ready" : "loading");
 
   useEffect(() => {
     // Zdjęcie wbudowane — nic nie pobieramy, koniec tematu.
-    if (local?.plik) {
-      setSrc(local.plik);
-      setCredit({
-        name: local.autor,
-        link: local.zrodlo,
-        licencja: local.licencja,
-        zrodlo: "Wikimedia Commons",
-      });
+    if (local?.src) {
+      setSrc(local.src);
+      setCredit(local.credit);
       setStatus("ready");
       return;
     }
@@ -118,7 +130,15 @@ export function useHerbImage({ id, wiki, nameLat }) {
     return () => {
       cancelled = true;
     };
-  }, [cacheKey, wiki, nameLat, local]);
+  }, [cacheKey, wiki, nameLat, local?.src]);
 
-  return { src, credit, status };
+  // photos = wszystko, co da się pokazać w podglądzie pełnoekranowym.
+  // Przy zdjęciach wbudowanych bywa ich kilka; z sieci wraca jedno.
+  const photos = wbudowane.length
+    ? wbudowane
+    : src
+      ? [{ src, credit }]
+      : [];
+
+  return { src, credit, status, photos };
 }

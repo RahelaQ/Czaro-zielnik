@@ -7,9 +7,24 @@
 // Bez klucza endpoint po prostu zwraca { url: null }, a appka i tak
 // pokaże zdjęcie z Wikimedia (patrz src/hooks/useHerbImage.js).
 
+import { sprawdzLimit, obcePochodzenie } from "./_limit.js";
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "method_not_allowed" });
+    return;
+  }
+
+  if (obcePochodzenie(req)) {
+    res.status(403).json({ error: "forbidden_origin" });
+    return;
+  }
+
+  // Ten endpoint jest tylko wygodą — bez zdjęcia z Unsplasha karta i tak się
+  // wyświetli. Po przekroczeniu limitu udajemy więc "nie znalazłem" zamiast
+  // zwracać błąd: aplikacja pokaże znak zastępczy i pójdzie dalej.
+  if (sprawdzLimit(req)) {
+    res.status(200).json({ url: null, credit: null });
     return;
   }
 

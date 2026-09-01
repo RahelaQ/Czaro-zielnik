@@ -60,6 +60,14 @@ export function useMyCollection() {
           opis: result.opis || "",
           rodzina: result.rodzina || "",
           wiki: result.namePl,
+          // Ostrzeżenie zapisujemy RAZEM z rośliną. Wcześniej przepadało tutaj:
+          // roślina rozpoznana przez indeks jako trująca lądowała w Moich
+          // Zbiorach jako zwykły wpis i jej karta nie mówiła już o niczym.
+          // Wpis custom nie ma dokąd sięgnąć po te dane później — nie ma go
+          // w herbs.js — więc albo zapiszemy je teraz, albo znikną na zawsze.
+          uwaga: result.ostrzezenie || "",
+          sobowtor: result.sobowtor || null,
+          trujaca: !!result.trujaca,
         },
       },
     ]);

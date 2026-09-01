@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { compressForUpload } from "../utils/image.js";
+import { CameraIcon, GalleryIcon } from "./Icons.jsx";
 import { getCoords } from "../utils/db.js";
 import {
   identifyPlant,
@@ -68,7 +69,14 @@ export default function IdentifyView({
 
     // Pozycja przyda się, gdy zdjęcie pójdzie do kolejki: chcesz wiedzieć,
     // gdzie wrócić po zbiór. Nigdzie jej nie wysyłamy.
-    const coords = await getCoords();
+    //
+    // NIE czekamy tu na nią. Wcześniej stało tu `await getCoords()` przed
+    // wysyłką, więc rozpoznanie zaczynało się dopiero po tym, jak GPS się
+    // odezwie albo odmówi — a na dokładkę pasek postępu pokazywał w tym
+    // czasie "Przygotowuję zdjęcie...", czyli mówił nieprawdę. Teraz pytanie
+    // o pozycję leci równolegle z wysyłką, a jej wynik odbieramy dopiero
+    // tam, gdzie jest naprawdę potrzebny: przy zapisie.
+    const pozycja = getCoords();
 
     setStage("upload");
     const controller = new AbortController();
@@ -83,11 +91,11 @@ export default function IdentifyView({
       });
       setResult(parsed);
       setStage(null);
-      queue?.remember({ blob: shot.blob, coords, result: parsed });
+      queue?.remember({ blob: shot.blob, coords: await pozycja, result: parsed });
     } catch (err) {
       const kind = err instanceof IdentifyError ? err.kind : "server";
       const canQueue = RETRYABLE.has(kind);
-      if (canQueue) await queue?.enqueue({ blob: shot.blob, coords });
+      if (canQueue) await queue?.enqueue({ blob: shot.blob, coords: await pozycja });
       setStage(null);
       setError({ kind, queued: canQueue });
     }
@@ -97,6 +105,7 @@ export default function IdentifyView({
   const alreadySaved = matched ? collection.isSaved(matched.id) : false;
   const savedNow = alreadySaved || justAdded;
   const pendingCount = queue?.pending?.length || 0;
+  const failedCount = queue?.failed?.length || 0;
 
   const handleAdd = () => {
     if (matched) collection.addFromLibrary(matched);
@@ -112,6 +121,29 @@ export default function IdentifyView({
           <p>Zrób zdjęcie rośliny lub wybierz z galerii</p>
         </div>
       </div>
+
+      {failedCount > 0 && (
+        <div className="queue-banner">
+          <span className="queue-banner__dot" style={{ background: "#9A3B3B" }} />
+          <div>
+            <strong>
+              {failedCount === 1
+                ? "1 zdjęcia nie udało się rozpoznać"
+                : `${failedCount} zdjęć nie udało się rozpoznać`}
+            </strong>
+            <p>
+              Po pięciu próbach przestaję ponawiać.{" "}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => queue?.porzucNieudane()}
+              >
+                Usuń z kolejki
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
 
       {pendingCount > 0 && (
         <div className="queue-banner">
@@ -131,6 +163,12 @@ export default function IdentifyView({
         </div>
       )}
 
+      {/*
+        Dwa OSOBNE pola, nie jedno. Atrybut capture="environment" na iOS nie
+        jest podpowiedzia — on wymusza aparat i CALKOWICIE usuwa wybor
+        "Biblioteka zdjec". Dlatego wczesniej nie dalo sie wgrac zdjecia
+        zrobionego wczesniej. Pole bez capture otwiera galerie normalnie.
+      */}
       <label className="upload-area">
         <span className="upload-corner upload-corner--tl" />
         <span className="upload-corner upload-corner--tr" />
@@ -140,15 +178,30 @@ export default function IdentifyView({
           <img src={preview} alt="Twoje zdjęcie" className="upload-preview" />
         ) : (
           <>
-            <span className="upload-plus">+</span>
-            <span className="upload-text-main">Aparat / galeria</span>
-            <span className="upload-text-sub">Aparat &nbsp;·&nbsp; Galeria</span>
+            <span className="upload-icon">
+              <CameraIcon width="30" height="30" />
+            </span>
+            <span className="upload-text-main">Zrób zdjęcie</span>
+            <span className="upload-text-sub">
+              Liść, kwiat albo kora — jeden organ, blisko, na spokojnym tle
+            </span>
           </>
         )}
         <input
           type="file"
           accept="image/*"
           capture="environment"
+          onChange={handleFile}
+          style={{ display: "none" }}
+        />
+      </label>
+
+      <label className="upload-alt">
+        <GalleryIcon width="18" height="18" />
+        <span>{preview ? "Wybierz inne zdjęcie z galerii" : "Wybierz z galerii"}</span>
+        <input
+          type="file"
+          accept="image/*"
           onChange={handleFile}
           style={{ display: "none" }}
         />
@@ -216,7 +269,8 @@ export default function IdentifyView({
               {result.opis}
             </p>
 
-            {result.ostrzezenie && (
+            {result.ostrzezenie &&
+              !(result.sobowtor && result.ostrzezenieZrodlo === "sobowtor") && (
               <div
                 className="kupala-note"
                 style={{ margin: "0.9rem 0 0", background: "var(--bg-surface)" }}
@@ -224,6 +278,32 @@ export default function IdentifyView({
                 {result.ostrzezenie} Nigdy nie jedz ani nie stosuj rośliny na
                 podstawie samego rozpoznania ze zdjęcia — skonsultuj się z
                 doświadczonym zbieraczem lub atlasem roślin.
+              </div>
+            )}
+
+            {/* Sobowtór. API zwracało to pole od dawna, ale ten widok go nie
+                czytał — ostrzeżenie o roślinie, z którą można pomylić właśnie
+                rozpoznaną, dawało się zobaczyć dopiero po kliknięciu "Karta".
+                Czyli: stoisz nad podagrycznikiem, aplikacja mówi "podagrycznik,
+                72%" i milczy o szczwole plamistym. Tu, na ekranie, na którym
+                stoisz nad rośliną, jest to potrzebne bardziej niż gdziekolwiek
+                indziej. Ten sam układ co w karcie zioła, świadomie. */}
+            {result.sobowtor && (
+              <div
+                className="warn-box warn-box--lookalike"
+                style={{ margin: "0.9rem 0 0" }}
+              >
+                <p className="warn-box__label">Można pomylić z</p>
+                <p className="lookalike-name">
+                  {result.sobowtor.namePl}{" "}
+                  <span className="lookalike-lat">{result.sobowtor.nameLat}</span>
+                </p>
+                <p>
+                  <strong>Po czym poznasz:</strong> {result.sobowtor.jak}
+                </p>
+                <p className="lookalike-risk">
+                  <strong>Ryzyko pomyłki:</strong> {result.sobowtor.ryzyko}
+                </p>
               </div>
             )}
 

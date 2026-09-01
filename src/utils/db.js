@@ -137,14 +137,39 @@ export async function sightingRemove(id) {
 export function getCoords({ timeout = 6000 } = {}) {
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(null);
+
+    // Twardy limit po naszej stronie. Opcja `timeout` przekazywana do
+    // getCurrentPosition liczy sie DOPIERO od chwili przyznania uprawnienia:
+    // dopoki wisi okienko "czy zezwolic na dostep do lokalizacji", zegar nie
+    // chodzi. Jesli uzytkowniczka go nie dotknie — a w lesie, jedna reka, z
+    // roslina w drugiej, to sytuacja domyslna — nie przychodzi ani callback
+    // sukcesu, ani bledu, i obietnica nie rozwiazuje sie nigdy.
+    // Rozpoznawanie stalo wtedy na "Przygotowuje zdjecie..." bez konca:
+    // bez wyniku, bez bledu, bez wyjscia.
+    //
+    // Pozycja jest dodatkiem — wiadomo, gdzie wrocic po zbior. Nigdy nie
+    // powinna byc powodem, dla ktorego rozpoznanie nie dochodzi do skutku.
+    let zamkniete = false;
+    const zakoncz = (wynik) => {
+      if (zamkniete) return;
+      zamkniete = true;
+      resolve(wynik);
+    };
+    const straznik = setTimeout(() => zakoncz(null), timeout + 1500);
+
     navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        resolve({
+      (pos) => {
+        clearTimeout(straznik);
+        zakoncz({
           lat: Number(pos.coords.latitude.toFixed(5)),
           lon: Number(pos.coords.longitude.toFixed(5)),
           acc: Math.round(pos.coords.accuracy),
-        }),
-      () => resolve(null),
+        });
+      },
+      () => {
+        clearTimeout(straznik);
+        zakoncz(null);
+      },
       { enableHighAccuracy: false, timeout, maximumAge: 120000 }
     );
   });

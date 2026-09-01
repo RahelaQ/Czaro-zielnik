@@ -2,6 +2,7 @@ import React from "react";
 import HerbImage from "./HerbImage.jsx";
 import HarvestOfMonth from "./HarvestOfMonth.jsx";
 import { HERBS } from "../data/herbs.js";
+import { BasketIcon, CalendarIcon, CameraIcon } from "./Icons.jsx";
 
 // Stabilne w ciągu dnia (liczone od epoki), zmienia się raz na dobę o północy —
 // każdego dnia inne zioło, ale bez losowości przy każdym odświeżeniu appki.
@@ -24,9 +25,6 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
     <div className="home-view">
       <div className="wordmark-row">
         <span className="wordmark">CZARO — ZIELNIK</span>
-        <div className="avatar-dot" aria-hidden>
-          🌿
-        </div>
       </div>
 
       <span className="section-label">Zioło dnia</span>
@@ -47,9 +45,7 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
       <div className="quick-access-grid">
         <button className="quick-tile" onClick={() => onNavigate("zbiory")}>
           <span className="quick-tile-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <rect x="4" y="4" width="16" height="16" rx="3" />
-            </svg>
+            <BasketIcon />
           </span>
           <span>
             Moje zbiory
@@ -58,9 +54,7 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
         </button>
         <button className="quick-tile" onClick={() => onNavigate("kalendarz")}>
           <span className="quick-tile-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <circle cx="12" cy="12" r="8" />
-            </svg>
+            <CalendarIcon />
           </span>
           <span>
             Kalendarz
@@ -69,9 +63,7 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
         </button>
         <button className="quick-tile" onClick={() => onNavigate("rozpoznaj")}>
           <span className="quick-tile-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <rect x="4" y="4" width="16" height="16" rx="3" />
-            </svg>
+            <CameraIcon />
           </span>
           <span>
             Rozpoznaj

@@ -31,6 +31,9 @@ function blobToBase64(blob) {
 
 export function useIdentifyQueue() {
   const [pending, setPending] = useState([]);
+  // Wpisy, ktore wyczerpaly proby. Trzymane osobno, bo one juz nie czekaja —
+  // nic sie z nimi samo nie stanie.
+  const [failed, setFailed] = useState([]);
   const [sightings, setSightings] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const syncing = useRef(false);
@@ -38,7 +41,12 @@ export function useIdentifyQueue() {
   const refresh = useCallback(async () => {
     try {
       const [q, s] = await Promise.all([queueAll(), sightingsAll()]);
-      setPending(q);
+      // Wpis po MAX_ATTEMPTS jest w petli flush pomijany, ale zostawal w
+      // kolejce i nadal liczyl sie do banera "N zdjec czeka na rozpoznanie".
+      // Baner swiecil wiec bez konca, obiecujac cos, co nigdy nie mialo sie
+      // wydarzyc, a usunac wpisu nie dalo sie z zadnego ekranu.
+      setPending(q.filter((it) => (it.attempts || 0) < MAX_ATTEMPTS));
+      setFailed(q.filter((it) => (it.attempts || 0) >= MAX_ATTEMPTS));
       setSightings(s);
     } catch {
       // IndexedDB potrafi być niedostępna w trybie prywatnym Safari —
@@ -69,6 +77,24 @@ export function useIdentifyQueue() {
     },
     [refresh]
   );
+
+  // Wyrzucenie wpisu, ktory sie nie uda. Bez tego jedyna droga byloby
+  // wyczyszczenie danych aplikacji w ustawieniach przegladarki.
+  const porzuc = useCallback(
+    async (id) => {
+      await queueRemove(id);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  const porzucNieudane = useCallback(async () => {
+    const wszystkie = await queueAll();
+    for (const it of wszystkie) {
+      if ((it.attempts || 0) >= MAX_ATTEMPTS) await queueRemove(it.id);
+    }
+    await refresh();
+  }, [refresh]);
 
   // Przerabia kolejkę po jednym zdjęciu. Przy pierwszym błędzie, który da się
   // przeczekać, przerywa cały przebieg — skoro sieć nie działa dla jednego
@@ -123,5 +149,17 @@ export function useIdentifyQueue() {
     };
   }, [refresh, flush]);
 
-  return { pending, sightings, isSyncing, enqueue, remember, forget, flush, refresh };
+  return {
+    pending,
+    failed,
+    sightings,
+    isSyncing,
+    enqueue,
+    remember,
+    forget,
+    porzuc,
+    porzucNieudane,
+    flush,
+    refresh,
+  };
 }
