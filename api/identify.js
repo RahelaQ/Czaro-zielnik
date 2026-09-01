@@ -157,15 +157,37 @@ export default async function handler(req, res) {
 
     // Ostrzeżenia idą kaskadą od najostrzejszego: własne hasło wie najwięcej,
     // potem indeks, na końcu sama niepewność rozpoznania.
+    //
+    // Sobowtór MUSI być w tej kaskadzie. Wcześniej go nie było i cztery hasła
+    // z opisanym sobowtórem, ale bez pola `uwaga` — podagrycznik, rumianek,
+    // macierzanka, łopian — przy wysokiej pewności wypadały z niej na wylot
+    // i wracały z ostrzezenie: null. Podagrycznik myli się ze szczwołem
+    // plamistym, czyli rośliną, którą otruto Sokratesa. Wychodziło na to, że
+    // im lepiej Pl@ntNet rozpoznał roślinę, tym mniej ostrzeżeń dostawała
+    // użytkowniczka.
+    //
+    // Pole `sobowtor` idzie osobno w odpowiedzi i to ono jest pokazywane
+    // porządnie (IdentifyView). Tutaj streszczamy je jeszcze raz w `ostrzezenie`
+    // celowo: telefon z zainstalowaną PWA potrafi długo trzymać stary bundel,
+    // a starszy widok czytał wyłącznie to jedno pole.
     let ostrzezenie = null;
+    let ostrzezenieZrodlo = null;
     if (herb?.uwaga) {
       ostrzezenie = herb.uwaga;
+      ostrzezenieZrodlo = "roslina";
     } else if (indexed?.trujaca) {
       ostrzezenie =
         "Ta roślina jest notowana jako trująca. Nie zbieraj jej i nie stosuj.";
+      ostrzezenieZrodlo = "roslina";
+    } else if (herb?.sobowtor) {
+      ostrzezenie =
+        `Można pomylić z: ${herb.sobowtor.namePl} (${herb.sobowtor.nameLat}). ` +
+        `Ryzyko pomyłki: ${herb.sobowtor.ryzyko}`;
+      ostrzezenieZrodlo = "sobowtor";
     } else if (pewnosc !== "wysoka") {
       ostrzezenie =
         "Pewność rozpoznania nie jest wysoka — nie zbieraj ani nie stosuj tej rośliny bez potwierdzenia przez doświadczoną osobę lub atlas roślin. Niektóre gatunki mają toksyczne sobowtóry.";
+      ostrzezenieZrodlo = "pewnosc";
     }
 
     res.status(200).json({
@@ -175,6 +197,11 @@ export default async function handler(req, res) {
       procent: percent,
       opis,
       ostrzezenie,
+      // Skąd wzięło się `ostrzezenie`. Nowy widok pomija pudełko, gdy treść
+      // jest streszczeniem sobowtóra, bo zaraz pod spodem rysuje go w całości
+      // — bez tego użytkowniczka czyta to samo dwa razy. Starszy widok, który
+      // tego pola nie zna, pokaże streszczenie i nadal będzie ostrzeżony.
+      ostrzezenieZrodlo,
       zielnikId: herb?.id || null,
       rodzina: herb?.rodzina || indexed?.rodzina || family,
       lecznicza: herb ? true : indexed?.lecznicza ?? null,

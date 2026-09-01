@@ -71,6 +71,12 @@ export default function App() {
           dzien: "",
           zywiol: "",
           rodzina: item.custom.rodzina || "",
+          // Ostrzeżenia przepuszczamy dalej — HerbDetail rysuje je z pól
+          // `uwaga` i `sobowtor`, więc bez tych trzech linii karta rośliny
+          // rozpoznanej jako trująca wyglądała jak karta dowolnego zioła.
+          uwaga: item.custom.uwaga || "",
+          sobowtor: item.custom.sobowtor || null,
+          trujaca: !!item.custom.trujaca,
           addedAt: item.addedAt,
           isCustom: true,
         };

@@ -69,7 +69,14 @@ export default function IdentifyView({
 
     // Pozycja przyda się, gdy zdjęcie pójdzie do kolejki: chcesz wiedzieć,
     // gdzie wrócić po zbiór. Nigdzie jej nie wysyłamy.
-    const coords = await getCoords();
+    //
+    // NIE czekamy tu na nią. Wcześniej stało tu `await getCoords()` przed
+    // wysyłką, więc rozpoznanie zaczynało się dopiero po tym, jak GPS się
+    // odezwie albo odmówi — a na dokładkę pasek postępu pokazywał w tym
+    // czasie "Przygotowuję zdjęcie...", czyli mówił nieprawdę. Teraz pytanie
+    // o pozycję leci równolegle z wysyłką, a jej wynik odbieramy dopiero
+    // tam, gdzie jest naprawdę potrzebny: przy zapisie.
+    const pozycja = getCoords();
 
     setStage("upload");
     const controller = new AbortController();
@@ -84,11 +91,11 @@ export default function IdentifyView({
       });
       setResult(parsed);
       setStage(null);
-      queue?.remember({ blob: shot.blob, coords, result: parsed });
+      queue?.remember({ blob: shot.blob, coords: await pozycja, result: parsed });
     } catch (err) {
       const kind = err instanceof IdentifyError ? err.kind : "server";
       const canQueue = RETRYABLE.has(kind);
-      if (canQueue) await queue?.enqueue({ blob: shot.blob, coords });
+      if (canQueue) await queue?.enqueue({ blob: shot.blob, coords: await pozycja });
       setStage(null);
       setError({ kind, queued: canQueue });
     }
@@ -238,7 +245,8 @@ export default function IdentifyView({
               {result.opis}
             </p>
 
-            {result.ostrzezenie && (
+            {result.ostrzezenie &&
+              !(result.sobowtor && result.ostrzezenieZrodlo === "sobowtor") && (
               <div
                 className="kupala-note"
                 style={{ margin: "0.9rem 0 0", background: "var(--bg-surface)" }}
@@ -246,6 +254,32 @@ export default function IdentifyView({
                 {result.ostrzezenie} Nigdy nie jedz ani nie stosuj rośliny na
                 podstawie samego rozpoznania ze zdjęcia — skonsultuj się z
                 doświadczonym zbieraczem lub atlasem roślin.
+              </div>
+            )}
+
+            {/* Sobowtór. API zwracało to pole od dawna, ale ten widok go nie
+                czytał — ostrzeżenie o roślinie, z którą można pomylić właśnie
+                rozpoznaną, dawało się zobaczyć dopiero po kliknięciu "Karta".
+                Czyli: stoisz nad podagrycznikiem, aplikacja mówi "podagrycznik,
+                72%" i milczy o szczwole plamistym. Tu, na ekranie, na którym
+                stoisz nad rośliną, jest to potrzebne bardziej niż gdziekolwiek
+                indziej. Ten sam układ co w karcie zioła, świadomie. */}
+            {result.sobowtor && (
+              <div
+                className="warn-box warn-box--lookalike"
+                style={{ margin: "0.9rem 0 0" }}
+              >
+                <p className="warn-box__label">Można pomylić z</p>
+                <p className="lookalike-name">
+                  {result.sobowtor.namePl}{" "}
+                  <span className="lookalike-lat">{result.sobowtor.nameLat}</span>
+                </p>
+                <p>
+                  <strong>Po czym poznasz:</strong> {result.sobowtor.jak}
+                </p>
+                <p className="lookalike-risk">
+                  <strong>Ryzyko pomyłki:</strong> {result.sobowtor.ryzyko}
+                </p>
               </div>
             )}
 
