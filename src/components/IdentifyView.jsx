@@ -105,6 +105,7 @@ export default function IdentifyView({
   const alreadySaved = matched ? collection.isSaved(matched.id) : false;
   const savedNow = alreadySaved || justAdded;
   const pendingCount = queue?.pending?.length || 0;
+  const failedCount = queue?.failed?.length || 0;
 
   const handleAdd = () => {
     if (matched) collection.addFromLibrary(matched);
@@ -120,6 +121,29 @@ export default function IdentifyView({
           <p>Zrób zdjęcie rośliny lub wybierz z galerii</p>
         </div>
       </div>
+
+      {failedCount > 0 && (
+        <div className="queue-banner">
+          <span className="queue-banner__dot" style={{ background: "#9A3B3B" }} />
+          <div>
+            <strong>
+              {failedCount === 1
+                ? "1 zdjęcia nie udało się rozpoznać"
+                : `${failedCount} zdjęć nie udało się rozpoznać`}
+            </strong>
+            <p>
+              Po pięciu próbach przestaję ponawiać.{" "}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => queue?.porzucNieudane()}
+              >
+                Usuń z kolejki
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
 
       {pendingCount > 0 && (
         <div className="queue-banner">

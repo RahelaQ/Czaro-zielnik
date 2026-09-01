@@ -1302,6 +1302,19 @@ body { background: var(--bg-page); }
 }
 
 .upload-alt:active { transform: scale(0.99); }
+
+/* Przycisk wygladajacy jak odnosnik — do akcji stojacej w zdaniu, jak
+   "Usun z kolejki" w banerze nieudanych rozpoznan. */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
 .upload-alt svg { flex: none; color: var(--icon-stroke); }
 
 /* ==========================================================================
