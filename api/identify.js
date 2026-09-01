@@ -15,8 +15,14 @@
 
 import { HERBS } from "../src/data/herbs.js";
 import { lookupSpecies, normalizeLatin } from "../src/data/speciesIndex.js";
+import { sprawdzLimit, obcePochodzenie } from "./_limit.js";
 
 const PLANTNET_TIMEOUT_MS = 20000;
+
+// Klient kompresuje zdjęcie do ~150-250 KB (src/utils/image.js), więc wszystko
+// powyżej tego sufitu nie pochodzi z aplikacji. Vercel i tak utnie na 4,5 MB,
+// ale odrzucenie tutaj kosztuje mniej niż zdekodowanie base64 do bufora.
+const MAX_BASE64 = 4_000_000;
 
 function findZielnikMatch(scientificName) {
   const target = normalizeLatin(scientificName);
@@ -52,9 +58,25 @@ export default async function handler(req, res) {
     return;
   }
 
+  if (obcePochodzenie(req)) {
+    res.status(403).json({ error: "forbidden_origin" });
+    return;
+  }
+
+  const limit = sprawdzLimit(req);
+  if (limit) {
+    res.setHeader("Retry-After", String(limit.retryAfter));
+    res.status(limit.status).json({ error: limit.error });
+    return;
+  }
+
   const { image, mediaType } = req.body || {};
   if (!image) {
     res.status(400).json({ error: "missing_image" });
+    return;
+  }
+  if (typeof image !== "string" || image.length > MAX_BASE64) {
+    res.status(413).json({ error: "image_too_large" });
     return;
   }
 

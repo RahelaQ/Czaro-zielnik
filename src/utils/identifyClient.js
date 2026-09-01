@@ -11,7 +11,7 @@ export const TIMEOUT_MS = 25000;
 export class IdentifyError extends Error {
   constructor(kind, message) {
     super(message || kind);
-    this.kind = kind; // offline | timeout | too_large | no_key | server | network
+    this.kind = kind; // offline | timeout | too_large | no_key | rate_limited | server | network
   }
 }
 
@@ -53,6 +53,10 @@ export async function identifyPlant({ base64, mediaType, signal }) {
     }
     if (body?.error === "missing_api_key") throw new IdentifyError("no_key");
     if (response.status === 504) throw new IdentifyError("timeout");
+    // 429 wraca z naszej własnej osłony (api/_limit.js). Bez osobnego rodzaju
+    // wpadałoby do "server" i mówiło "coś padło po stronie serwera", co jest
+    // nieprawdą i kieruje uwagę w złe miejsce.
+    if (response.status === 429) throw new IdentifyError("rate_limited");
     throw new IdentifyError("server", body?.error || `HTTP ${response.status}`);
   }
 
@@ -82,6 +86,10 @@ export const ERROR_COPY = {
     title: "Rozpoznawanie nieskonfigurowane",
     body: "Brakuje klucza PLANTNET_API_KEY po stronie serwera. To ustawienie w panelu Vercel, nie problem z Twoim telefonem.",
   },
+  rate_limited: {
+    title: "Za dużo rozpoznań naraz",
+    body: "Aplikacja ma dzienny limit rozpoznań i właśnie go przyciska. Zdjęcie czeka w kolejce — spróbuję ponownie za chwilę.",
+  },
   server: {
     title: "Coś padło po stronie serwera",
     body: "Zdjęcie zostało zapisane w kolejce. Spróbuj ponownie za chwilę.",
@@ -89,4 +97,4 @@ export const ERROR_COPY = {
 };
 
 // Te błędy da się naprawić samym czekaniem — zdjęcie trafia do kolejki.
-export const RETRYABLE = new Set(["offline", "network", "timeout", "server"]);
+export const RETRYABLE = new Set(["offline", "network", "timeout", "server", "rate_limited"]);
