@@ -1,67 +1,84 @@
-# Generuje ikony PWA. Odpalasz tylko wtedy, gdy chcesz zmienic znak:
+# Generuje ikony PWA i favicon ze znaku appki (babka w owalu).
+# Odpalasz tylko wtedy, gdy zmienia sie znak:
+#
+#   python3 -m pip install cairosvg
 #   python3 scripts/make-icons.py
-# Rysujemy w 1024 px i zmniejszamy z LANCZOS — krawedzie wychodza gladkie
-# bez zadnych zewnetrznych bibliotek poza Pillow.
+#
+# Zrodlem jest ten sam rysunek, co w src/components/Logo.jsx — jedne sciezki,
+# jeden znak. Rasteryzujemy przez cairosvg, bo Pillow nie umie beziera z pliku
+# SVG, a przepisywanie lisci na kod rysujacy rozjechaloby sie z komponentem.
 
-from PIL import Image, ImageDraw
+from pathlib import Path
 
-S = 1024
-BG = (47, 58, 49)        # gleboka zielen lasu
-CREAM = (234, 228, 218)  # Nordic Linen
-SAGE = (155, 173, 148)   # przygaszona zielen na liscie
+import cairosvg
 
-def sprig(size=S, pad=0.0):
-    """Ksiezyc w nowiu i galazka — botanika plus magia, znak calej appki."""
-    img = Image.new("RGBA", (size, size), BG + (255,))
-    d = ImageDraw.Draw(img)
-    c = size / 2
-    k = size * (1 - 2 * pad)          # obszar rysunku po odjeciu marginesu
-    off = size * pad
+BG = "#2F3A31"    # gleboka zielen lasu
+MARK = "#9BAD94"  # przygaszona zielen (sage) — znak
 
-    # --- ksiezyc: pelne kolo minus kolo przesuniete ---
-    moon = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    md = ImageDraw.Draw(moon)
-    r = k * 0.20
-    mx, my = off + k * 0.70, off + k * 0.26
-    md.ellipse([mx - r, my - r, mx + r, my + r], fill=CREAM + (255,))
-    md.ellipse(
-        [mx - r * 1.30, my - r * 1.18, mx + r * 0.72, my + r * 0.94],
-        fill=(0, 0, 0, 0),
+ELLIPSE = '<ellipse cx="60" cy="60" rx="39" ry="47"/>'
+LEAVES = (
+    '<path d="M60 101 C43.5 84 43.5 61 60 42 C76.5 61 76.5 84 60 101 Z"/>'
+    '<path d="M60 101 C39 97 27 80.5 25.5 61.5 C46 65.5 58.5 82 60 101 Z"/>'
+    '<path d="M60 101 C81 97 93 80.5 94.5 61.5 C74 65.5 61.5 82 60 101 Z"/>'
+)
+SPARKLES = (
+    '<g opacity=".85">'
+    '<path d="M60 25 L60 35 M55 30 L65 30"/>'
+    '<path d="M41 39 L41 45.5 M37.75 42.25 L44.25 42.25"/>'
+    '<path d="M79 39 L79 45.5 M75.75 42.25 L82.25 42.25"/>'
+    "</g>"
+)
+LEAF_SOLO = '<path d="M60 101 C41 82 41 59 60 39 C79 59 79 82 60 101 Z"/>'
+
+
+def svg(scale=1.0, stroke=2.2, sparkles=True, solo=False, radius=0):
+    """Znak wysrodkowany na ciemnym kaflu. `scale` zmniejsza rysunek wzgledem
+    kafla — wersja maskable musi zmiescic sie w srodkowych 80%, bo Android
+    przycina ikone do kola."""
+    body = ELLIPSE + (LEAF_SOLO if solo else LEAVES)
+    if sparkles and not solo:
+        body += SPARKLES
+    # 120-jednostkowy znak wpisany w 120-jednostkowy kafel, przeskalowany
+    # wokol srodka. Kreska rosnie odwrotnie do skali, zeby zostala tej samej
+    # grubosci na gotowej ikonie.
+    tile = f'<rect width="120" height="120" rx="{radius}" fill="{BG}"/>'
+    g = (
+        f'<g transform="translate(60 60) scale({scale}) translate(-60 -60)" '
+        f'fill="none" stroke="{MARK}" stroke-width="{stroke / scale}" '
+        'stroke-linecap="round" stroke-linejoin="round">'
+        f"{body}</g>"
     )
-    img.alpha_composite(moon)
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" '
+        f'width="120" height="120">{tile}{g}</svg>'
+    )
 
-    # --- lodyga ---
-    stem_w = max(3, int(k * 0.022))
-    top = (c, off + k * 0.30)
-    bottom = (c, off + k * 0.86)
-    d.line([top, bottom], fill=CREAM + (255,), width=stem_w, joint="curve")
 
-    # --- liscie: elipsy rysowane osobno i obracane, po trzy na strone.
-    # Rosna ku dolowi, malejac ku wierzcholkowi — tak, jak rosnie roslina.
-    for i, t in enumerate((0.22, 0.44, 0.66)):
-        ly = top[1] + (bottom[1] - top[1]) * t
-        lw = k * (0.185 + i * 0.050)
-        lh = k * (0.072 + i * 0.016)
-        for side in (-1, 1):
-            leaf = Image.new("RGBA", (int(lw * 2), int(lw * 2)), (0, 0, 0, 0))
-            ld = ImageDraw.Draw(leaf)
-            cx = lw
-            ld.ellipse([cx - lw / 2, cx - lh / 2, cx + lw / 2, cx + lh / 2],
-                       fill=SAGE + (255,))
-            leaf = leaf.rotate(-28 * side, resample=Image.BICUBIC)
-            px = int(c + side * lw * 0.42 - lw)
-            py = int(ly - lw)
-            img.alpha_composite(leaf, (px, py))
+def png(markup, path, size):
+    cairosvg.svg2png(
+        bytestring=markup.encode("utf-8"),
+        write_to=str(path),
+        output_width=size,
+        output_height=size,
+    )
+    print(f"  {path}  {size}x{size}")
 
-    return img.convert("RGB")
 
-base = sprig()
-base.resize((512, 512), Image.LANCZOS).save("public/icon-512.png")
-base.resize((192, 192), Image.LANCZOS).save("public/icon-192.png")
-base.resize((180, 180), Image.LANCZOS).save("public/apple-touch-icon.png")
+root = Path(__file__).resolve().parent.parent
+public = root / "public"
 
-# Wersja maskable: Android przycina ikone do kola, wiec znak musi zmiescic sie
-# w srodkowych 80% — inaczej ksiezyc zniknie pod krawedzia.
-sprig(pad=0.11).resize((512, 512), Image.LANCZOS).save("public/icon-maskable-512.png")
+print("Ikony:")
+tile = svg(scale=0.78)
+png(tile, public / "icon-512.png", 512)
+png(tile, public / "icon-192.png", 192)
+png(tile, public / "apple-touch-icon.png", 180)
 
-print("Ikony zapisane w public/")
+# Maskable: znak schodzi do 62% kafla, wiec caly miesci sie w bezpiecznym kole.
+png(svg(scale=0.62), public / "icon-maskable-512.png", 512)
+
+# Favicon: 32 px i mniej. Iskry sie zlepiaja, wiec ich tu nie ma; kafel
+# zaokraglony, zeby w karcie przegladarki nie byl kwadratem.
+(public / "favicon.svg").write_text(
+    svg(scale=0.74, stroke=4.5, sparkles=False, radius=18), encoding="utf-8"
+)
+print(f"  {public / 'favicon.svg'}")

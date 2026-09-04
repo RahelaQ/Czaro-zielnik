@@ -3,6 +3,7 @@ import HerbImage from "./HerbImage.jsx";
 import HarvestOfMonth from "./HarvestOfMonth.jsx";
 import { HERBS } from "../data/herbs.js";
 import { BasketIcon, CalendarIcon, CameraIcon } from "./Icons.jsx";
+import Logo from "./Logo.jsx";
 
 // Stabilne w ciągu dnia (liczone od epoki), zmienia się raz na dobę o północy —
 // każdego dnia inne zioło, ale bez losowości przy każdym odświeżeniu appki.
@@ -24,7 +25,11 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
   return (
     <div className="home-view">
       <div className="wordmark-row">
-        <span className="wordmark">CZARO — ZIELNIK</span>
+        <div className="lockup">
+          <Logo size={38} weight={1.5} title="Czaro-Zielnik" />
+          <span className="lockup-rule" aria-hidden="true" />
+          <span className="wordmark">CZARO — ZIELNIK</span>
+        </div>
       </div>
 
       <span className="section-label">Zioło dnia</span>

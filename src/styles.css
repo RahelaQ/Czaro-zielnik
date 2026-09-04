@@ -170,6 +170,23 @@ body { background: var(--bg-page); }
   color: var(--text-main);
 }
 
+/* Lockup poziomy: znak, wlosowa kreska, nazwa. Znak dziedziczy kolor tekstu,
+   wiec sam przechodzi z motywu jasnego w ciemny — bez drugiego pliku. */
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--text-main);
+}
+.lockup svg { flex: none; display: block; }
+.lockup-rule {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  margin: 0.15rem 0;
+  background: var(--border-soft);
+}
+
 /* -------------------------------------------------------------- Buttons */
 .btn-primary {
   background: var(--accent);
