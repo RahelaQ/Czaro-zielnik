@@ -10,6 +10,15 @@
 //   zrodlo               — JAK MOCNY jest zapis tej tradycji. Nie ozdobnik:
 //                          odróżnia rzecz udokumentowaną u Kolberga od takiej,
 //                          którą powtarzają współczesne blogi zielarskie.
+//   nazwyLudowe          — nazwy gwarowe i dawne. OSOBNE POLE, nie dopisek
+//                          w `moc`, z trzech powodów: to leksykografia, a nie
+//                          wierzenie; ma inne źródło niż tradycja opisana
+//                          w `moc`; i wyszukiwarka musi po nim szukać, bo
+//                          w terenie pada nazwa babci, nie botaniczna.
+//                          Kształt: { nazwy: [], skad?: "", zrodlo: "" }.
+//                          `zrodlo` obowiązuje tu tak samo jak przy `moc`:
+//                          jeśli nazwa jest słabo poświadczona, ma to być
+//                          napisane wprost, przy tej nazwie.
 //   dzien, zywiol        — przypisania magiczne
 //   rodzina, kategoria   — botanika i szufladka w bibliotece
 //   uwaga                — ostrzeżenie o SAMEJ roślinie (toksyczność, interakcje)
@@ -1034,6 +1043,37 @@ export const HERBS = [
       nameLat: "Vaccinium myrtillus, Sambucus nigra",
       jak: "Pokrzyk ma jagody pojedyncze, wielkości wiśni, osadzone w zielonym, pięcioramiennym kielichu jak w gwiazdce. Borówka jest drobna z koronką na szczycie, bez rośnie w baldachach po kilkadziesiąt owoców.",
       ryzyko: "Śmiertelna, szczególnie dla dzieci, bo jagody są słodkie.",
+    },
+  },
+  {
+    id: "Tojad",
+    namePl: "Tojad",
+    nameLat: "Aconitum",
+    wiki: "Tojad",         // dokładny tytuł hasła na pl.wikipedia.org
+    months: [],
+    part: "Nie zbieramy, w Polsce chronione",
+    // Hasło rodzajowe świadomie, nie gatunkowe: Fischer notuje, że w prawie
+    // wszystkich zapisach terenowych podano samą nazwę rodzajową. Tam, gdzie
+    // gatunek jest znany, to najczęściej tojad mocny (Aconitum firmum) —
+    // karpacki, nie A. napellus, który u nas praktycznie nie rośnie dziko.
+    moc: "Ziele przeciw diabłu, nie ziele lecznicze. Toja noszona przy sobie broniła od perelistnika — czarta-zalotnika napastującego młode kobiety. Legenda z Hrubieszowskiego opowiada o diable, który podszył się pod człowieka i namawiał dziewczynę, żeby zrzuciła z głowy kwiaty; nie zdołał jej wziąć i odszedł ze słowami „Kedyb ne terłycz, ne toja, byłaby dziewczyna moja”. Święcono tojad w wiązankach na Matki Boskiej Zielnej i wplatano w wianki na Boże Ciało, a poświęconą gałązkę przytykano do ściany domu, żeby szatan nie miał do niego przystępu; sadzono go też w ogródku tuż przy chacie. Pod Przeworskiem poświęconym tojadem kadzono izbę i bydło — na choroby, na dojność krów i na wydajność masła. Lud znał przy tym jego narkotyczne działanie i uznawał je „za lekarstwo na smutki”. Marcin z Urzędowa pisał o nim w 1595 roku od zupełnie innej strony: „iest ziele cudné ale złościwé, bo iad naywyższy iest”, i notował, że myśliwi zaprawiali nim groty.",
+    zrodlo: "Rośliny w wierzeniach i zwyczajach ludowych. Słownik Adama Fischera, oprac. M. Kujawska, Ł. Łuczaj, J. Sosnowska, P. Klepacki, PTL, Wrocław 2016, hasło „Tojad”, s. 479–480 — bardzo dobrze udokumentowane: zapisy terenowe z XIX w. z podanymi miejscowościami (Talko-Hryncewicz 1893, Kolberg Chełmskie II, Wisła XII, Udziela 1891, Łaguna). Cytaty o truciźnie i grotach: Marcin z Urzędowa, Herbarz Polski, Kraków 1595, s. 218 (ks. I, cap. 248), zapis własny autora.",
+    nazwyLudowe: {
+      nazwy: ["toja", "mordownik", "omieg", "omiak", "pantofelki", "chodaczek", "bucyki", "tojeść", "wołkoboj", "terbycz", "odkasnyk"],
+      skad: "„Mordownik” od tego, co roślina robi. Nazwy obuwnicze — pantofelki, chodaczek, bucyki — od kształtu kwiatu: górna działka okwiatu tworzy hełm, który z boku wygląda jak bucik. UWAGA na „omieg/omiak”: ta sama nazwa bywa używana dla omięgu górskiego (Doronicum), rośliny zupełnie innej i nietrującej. Marcin z Urzędowa w 1595 r. rozumiał przez „omiąg” i jedno, i drugie.",
+      zrodlo: "Słownik Adama Fischera, PTL, Wrocław 2016, s. 479–480 (nazwy ruskie wołkoboj, terbycz, odkasnyk — Ruś płd., Talko-Hryncewicz 1893: 407; bucyki — Udziela 1891: 224; tojeść — Adamki, pow. Żywiec; chodaczek — okolice Przeworska, Wisła XII: 58; omiak — Zakopane, Udziela 1891: 211). Pomieszanie z Doronicum: tamże, s. 237, za Rostafińskim 1900b I: 358–359.",
+    },
+    dzien: "Sobota (Saturn)",
+    zywiol: "Ziemia",
+    rodzina: "Jaskrowate (Ranunculaceae)",
+    kategoria: "Trujące",
+    trujaca: true,
+    uwaga: "NAJSILNIEJ TRUJĄCA ROŚLINA POLSKIEJ FLORY. Akonityna wchłania się także przez skórę — nie zrywać gołą ręką i nie wkładać do koszyka z ziołami na napar. Najwięcej trucizny jest w korzeniu. Dawka śmiertelna dla dorosłego to kilka miligramów akonityny, czyli ułamek grama korzenia. Objawy: mrowienie i drętwienie warg oraz języka, potem wymioty, zaburzenia rytmu serca, porażenie oddychania. Odtrutki nie ma, leczenie jest wyłącznie objawowe. Przy podejrzeniu zatrucia dzwoń pod 112. Ludowe użycie wewnętrzne — „na smutki”, „na nudy i szaleństwo” — jest zapisem etnograficznym, NIE przepisem do powtórzenia.",
+    sobowtor: {
+      namePl: "Chrzan i seler korzeniowy",
+      nameLat: "Armoracia rusticana, Apium graveolens",
+      jak: "Mylony bywa korzeń, nie liść: bulwa tojadu brana za chrzan albo seler wykopany na działce. Korzeń tojadu jest rzepowaty, ciemny z zewnątrz i biały w środku, i po przekrojeniu nie pachnie chrzanem. Liść tojadu jest dłoniasto wcinany na 5–7 wąskich łatek, kwiat granatowy z charakterystycznym hełmem.",
+      ryzyko: "Śmiertelne. To najczęstsza droga ciężkich zatruć tojadem — pomyłka przy kopaniu korzenia, nie przy zbiorze ziela.",
     },
   },
   {

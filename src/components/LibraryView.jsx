@@ -24,7 +24,12 @@ export default function LibraryView({ onOpen, collection }) {
         h.moc.toLowerCase().includes(q) ||
         (h.rodzina || "").toLowerCase().includes(q) ||
         (h.sobowtor?.namePl || "").toLowerCase().includes(q) ||
-        (h.sobowtor?.nameLat || "").toLowerCase().includes(q)
+        (h.sobowtor?.nameLat || "").toLowerCase().includes(q) ||
+        // Nazwa gwarowa jest często jedyną, jaką się pamięta: ktoś szuka
+        // "mordownika", nie "Aconitum napellus".
+        (h.nazwyLudowe?.nazwy || []).some((n) =>
+          n.toLowerCase().includes(q)
+        )
       );
     });
   }, [query, category]);

@@ -187,6 +187,16 @@ body { background: var(--bg-page); }
   background: var(--border-soft);
 }
 
+/* Nazwy ludowe — jedna linijka, rozstrzelona, żeby czytało się jak lista
+   wariantów, a nie jak zdanie. */
+.folk-names {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  margin: 0 0 0.4rem;
+}
+
 /* -------------------------------------------------------------- Buttons */
 .btn-primary {
   background: var(--accent);

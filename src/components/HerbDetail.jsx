@@ -76,6 +76,22 @@ export default function HerbDetail({ herb, onClose, collection }) {
             </>
           )}
 
+          {/* Nazwy ludowe stoją PRZED "Moc i symbolika", bo w terenie zwykle
+              przypomina się nazwa babci, nie botaniczna — a wyszukiwarka
+              szuka po nich tak samo jak po nazwie łacińskiej. */}
+          {herb.nazwyLudowe?.nazwy?.length > 0 && (
+            <>
+              <p className="section-label">Nazwy ludowe</p>
+              <p className="folk-names">
+                {herb.nazwyLudowe.nazwy.join(" · ")}
+              </p>
+              {herb.nazwyLudowe.skad && <p>{herb.nazwyLudowe.skad}</p>}
+              {herb.nazwyLudowe.zrodlo && (
+                <p className="zrodlo-note">Zapis: {herb.nazwyLudowe.zrodlo}</p>
+              )}
+            </>
+          )}
+
           <p className="section-label">Moc i symbolika</p>
           <p>{herb.moc}</p>
 
