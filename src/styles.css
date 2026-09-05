@@ -5,15 +5,17 @@
   --bg-surface: #F7F4EC;
   --bg-image: #DED7C7;
   --text-main: #3E4443;
-  --text-muted: #8C9188;
+  --text-muted: #626861;   /* WCAG AA: 4.5:1 na tle strony (bylo 2.55:1) */
   --text-body: #5C6360;
   --accent-pink: #CD9DA2;
-  --accent-pink-text: #3E4443;
-  --accent: #9a5638;
+  --accent-pink-text: #2E3332;
+  --accent: #8A4A2E;       /* WCAG AA jako tekst linku: 5.36:1 */
   --accent-text: #F7F4EC;
   --icon-stroke: #6E7A6E;
   --border-soft: rgba(62, 68, 67, 0.1);
-  --border-dashed: #B9B2A7;
+  --border-dashed: #847D6F; /* WCAG AA dla elementow nietekstowych: 3.2:1 */
+  --tag-month-bg: #DED7C7;
+  --tag-month-text: #3E4443;
   --shadow-card: 0 2px 10px rgba(62, 68, 67, 0.06);
   --shadow-float: 0 10px 26px rgba(62, 68, 67, 0.28);
 
@@ -25,6 +27,13 @@
   --radius-lg: 24px;
   --radius-md: 20px;
   --radius-sm: 14px;
+
+  /* Obwodka fokusu klawiaturowego. --focus-ring stoi na tle strony i kartach,
+     --focus-ring-invert na ciemnych powierzchniach: pasku zakladek, podgladzie
+     zdjecia, przycisku zamkniecia na fotografii. Obie maja ponad 3:1 wzgledem
+     swojego tla, czego wymaga WCAG 2.2 dla elementow nietekstowych. */
+  --focus-ring: #3E4443;
+  --focus-ring-invert: #F2EEE4;
 }
 
 /* --- Automatic dark mode based on device preference --- */
@@ -34,21 +43,25 @@
     --bg-surface: #59615A;       /* karty i powierzchnie */
     --bg-image: #6E7A6E;         /* placeholdery zdjec */
     --text-main: #F2EEE4;        /* naglowki */
-    --text-muted: #B4BBB2;       /* nazwy lacinskie, liczniki, etykiety */
+    --text-muted: #D6DCD3;       /* nazwy lacinskie, liczniki, etykiety */
     --text-body: #D6DAD2;        /* tekst ciagly */
     --accent-pink: #CD9DA2;      /* rozowy akcent (jak w light) */
-    --accent-pink-text: #3E4443; /* ciemny tekst na rozowym */
+    --accent-pink-text: #2E3332; /* ciemny tekst na rozowym */
     --accent: #CD9DA2;           /* CTA w dark = rozowy, nie brazowy */
-    --accent-text: #3E4443;      /* tekst na CTA */
+    --accent-text: #2E3332;      /* tekst na CTA — AA na rozowym: 5.47:1 */
     --icon-stroke: #C3C8C0;      /* obrysy ikon */
     --border-soft: rgba(242, 238, 228, 0.12);
-    --border-dashed: #7F8A7F;
+    --border-dashed: #9AA69A;
+    --tag-month-bg: #48514A;
+    --tag-month-text: #F2EEE4;
     --shadow-card: none;         /* brak cieni na kartach w dark */
     --shadow-float: 0 10px 26px rgba(0, 0, 0, 0.28);
     --tabbar-bg: #3E4443;        /* pasek nawigacji jak w light */
     --tabbar-active-bg: #EAE4DA;
     --tabbar-active-text: #3E4443;
     --tabbar-inactive: #C3C8C0;
+    --focus-ring: #F2EEE4;
+    --focus-ring-invert: #313531;
   }
 }
 
@@ -61,21 +74,25 @@
   --bg-surface: #59615A;       /* karty i powierzchnie */
   --bg-image: #6E7A6E;         /* placeholdery zdjec */
   --text-main: #F2EEE4;        /* naglowki */
-  --text-muted: #B4BBB2;       /* nazwy lacinskie, liczniki, etykiety */
+  --text-muted: #D6DCD3;       /* nazwy lacinskie, liczniki, etykiety */
   --text-body: #D6DAD2;        /* tekst ciagly */
   --accent-pink: #CD9DA2;      /* rozowy akcent (jak w light) */
-  --accent-pink-text: #3E4443; /* ciemny tekst na rozowym */
+  --accent-pink-text: #2E3332; /* ciemny tekst na rozowym */
   --accent: #CD9DA2;           /* CTA w dark = rozowy, nie brazowy */
-  --accent-text: #3E4443;      /* tekst na CTA */
+  --accent-text: #2E3332;      /* tekst na CTA — AA na rozowym: 5.47:1 */
   --icon-stroke: #C3C8C0;      /* obrysy ikon */
   --border-soft: rgba(242, 238, 228, 0.12);
-  --border-dashed: #7F8A7F;
+  --border-dashed: #9AA69A;
+  --tag-month-bg: #48514A;
+  --tag-month-text: #F2EEE4;
   --shadow-card: none;         /* brak cieni na kartach w dark */
   --shadow-float: 0 10px 26px rgba(0, 0, 0, 0.28);
   --tabbar-bg: #3E4443;        /* pasek nawigacji jak w light */
   --tabbar-active-bg: #EAE4DA;
   --tabbar-active-text: #3E4443;
   --tabbar-inactive: #C3C8C0;
+  --focus-ring: #F2EEE4;
+  --focus-ring-invert: #313531;
 }
 
 * { box-sizing: border-box; }
@@ -178,11 +195,15 @@ body { background: var(--bg-page); }
 
 /* Lockup poziomy: znak, wlosowa kreska, nazwa. Znak dziedziczy kolor tekstu,
    wiec sam przechodzi z motywu jasnego w ciemny — bez drugiego pliku. */
+/* Lockup jest naglowkiem h1 ekranu glownego — zerujemy marginesy naglowka,
+   wyglad zostaje ten sam. */
 .lockup {
   display: flex;
   align-items: center;
   gap: 0.7rem;
   color: var(--text-main);
+  margin: 0;
+  font-weight: 400;
 }
 .lockup svg { flex: none; display: block; }
 .lockup-rule {
@@ -241,7 +262,7 @@ body { background: var(--bg-page); }
   box-shadow: var(--shadow-card);
 }
 .hero-card-text { flex: 1.3; display: flex; flex-direction: column; }
-.hero-card h2 {
+.hero-card h3 {
   font-family: 'Playfair Display', serif;
   font-size: 1.55rem;
   font-weight: 500;
@@ -370,11 +391,23 @@ body { background: var(--bg-page); }
   padding: 0.25rem 0.6rem;
   border-radius: 20px;
 }
+/* W <button> nie wolno stawiac naglowkow ani akapitow, wiec podpisy sa
+   spanami. Nazwa rosliny nie jest tu naglowkiem takze z drugiego powodu:
+   caly kafelek to jeden przycisk, a naglowek w srodku przycisku i tak nie
+   dziala jako punkt nawigacji dla czytnika ekranu. */
+.harvest-card-image { display: block; }
 .harvest-card-text {
   padding: 0.65rem 0.75rem;
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+.harvest-more {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  padding: 0 1.4rem;
 }
 .harvest-card-pl {
   margin: 0 0 0.3rem;
@@ -407,13 +440,16 @@ body { background: var(--bg-page); }
   text-align: left;
   box-shadow: var(--shadow-card);
 }
-.archive-banner-text p {
+.archive-banner-text { display: block; }
+.archive-banner-title {
+  display: block;
   margin: 0 0 0.15rem;
   font-family: 'Playfair Display', serif;
   font-size: 1.05rem;
   color: var(--text-main);
 }
-.archive-banner-text span {
+.archive-banner-text > span:not(.archive-banner-title) {
+  display: block;
   font-family: 'Inter', sans-serif;
   font-size: 0.74rem;
   color: var(--text-muted);
@@ -421,6 +457,25 @@ body { background: var(--bg-page); }
 .archive-banner-arrow { font-size: 1.2rem; color: var(--accent); }
 
 /* --------------------------------------------------------- Recently viewed */
+/* Naglowek sekcji z linkiem po prawej. Bylo pisane stylami inline wprost
+   w HomeView.jsx — nie dalo sie tego dotknac ani sprawdzic z reszta appki. */
+.row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 1.5rem 1.4rem 0.6rem;
+}
+.row-header .section-label { margin: 0; }
+.link-button--quiet {
+  font: 500 0.72rem 'Inter', sans-serif;
+  text-decoration: none;
+}
+.link-button--quiet:hover,
+.link-button--quiet:focus-visible { text-decoration: underline; }
+
+/* Pasek ostatnio ogladanych jest lista takze dla czytnika ekranu. */
+.reset-list-row { list-style: none; margin: 0; }
+
 .recent-row {
   display: flex;
   gap: 0.7rem;
@@ -442,7 +497,9 @@ body { background: var(--bg-page); }
   font: inherit;
   color: inherit;
 }
+.recent-card > span { display: block; }
 .recent-card-image {
+  display: block;
   height: 62px;
   border-radius: 10px;
   background: var(--bg-image);
@@ -450,6 +507,7 @@ body { background: var(--bg-page); }
 }
 .recent-card-image .herb-photo { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
 .recent-card-pl {
+  display: block;
   font-family: 'Playfair Display', serif;
   font-size: 0.85rem;
   line-height: 1.2;
@@ -457,6 +515,7 @@ body { background: var(--bg-page); }
   margin: 0;
 }
 .recent-card-lat {
+  display: block;
   font-family: 'Inter', sans-serif;
   font-style: italic;
   font-size: 0.62rem;
@@ -478,7 +537,7 @@ body { background: var(--bg-page); }
   box-shadow: var(--shadow-card);
 }
 .search-box::placeholder { color: var(--text-muted); }
-.search-box:focus { outline: 2px solid var(--accent-pink); }
+/* obwodka fokusu — patrz sekcja DOSTEPNOSC na koncu pliku */
 
 .filter-row {
   display: flex;
@@ -504,8 +563,22 @@ body { background: var(--bg-page); }
   gap: 0.8rem;
   padding: 0 1.4rem 1.4rem;
 }
+/* Siatka kafelkow jest lista takze dla czytnika ekranu — mowi wtedy
+   "lista, 57 pozycji" zamiast czytac 57 przyciskow bez konca i poczatku.
+   Punktory zdejmujemy, ukladu to nie rusza: <li> jest komorka siatki. */
+/* Uwaga: bez `display` na <li>. Element listy w siatce albo we flexie i tak
+   zachowuje sie jak blok, a jawne `display: block` nadpisywalo uklad
+   ustawiony na samych kafelkach (np. .moon-strip__day rozsypywal sie
+   z kolumny w rzad). */
+.reset-list-grid { list-style: none; margin: 0; }
+.reset-list-grid > li { min-width: 0; }
 
 .herb-card { position: relative; }
+/* Akapity wewnatrz <button> to nieprawidlowy HTML, wiec podpisy na kafelku
+   sa spanami — a spany trzeba z powrotem ustawic w bloki. */
+.herb-card-main .herb-card-text,
+.herb-card-main .herb-card-lat,
+.herb-card-main .herb-card-pl { display: block; }
 .herb-card-main {
   width: 100%;
   background: var(--bg-surface);
@@ -522,7 +595,7 @@ body { background: var(--bg-page); }
   flex-direction: column;
   box-shadow: var(--shadow-card);
 }
-.herb-card-main:focus-visible { outline: 2px solid var(--accent-pink); }
+/* obwodka fokusu — patrz sekcja DOSTEPNOSC na koncu pliku */
 
 .herb-photo {
   width: 100%;
@@ -627,22 +700,60 @@ body { background: var(--bg-page); }
   gap: 0.7rem;
   padding: 0 1.4rem 1.4rem;
 }
+/* Wiersz w Moich Zbiorach ma DWIE osobne akcje: otworz karte i usun ze
+   zbiorow. Wczesniej caly wiersz byl jednym <button>, a krzyzyk siedzial
+   w srodku jako <span role="button"> — przycisk w przycisku, czego HTML nie
+   dopuszcza. Czytnik ekranu widzial jeden przycisk i nie dalo sie usunac
+   rosliny z klawiatury. Teraz wiersz jest zwyklym kontenerem, a przyciski
+   sa dwa, obok siebie. Wyglad bez zmian. */
 .collection-row {
   position: relative;
   width: 100%;
   background: var(--bg-surface);
-  border: none;
   border-radius: var(--radius-md);
-  padding: 0.85rem;
   display: flex;
   gap: 0.85rem;
   align-items: center;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.collection-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0.85rem 0 0.85rem 0.85rem;
   cursor: pointer;
   text-align: left;
   font: inherit;
   color: inherit;
-  box-shadow: var(--shadow-card);
 }
+.collection-row > .collection-row-remove { margin-right: 0.85rem; }
+
+/* Lista zbiorow jest lista takze dla czytnika ekranu (<ul>/<li>) — mowi
+   wtedy "lista, 12 pozycji" zamiast czytac dwanascie przyciskow bez konca.
+   Punktory i wciecie zdejmujemy. */
+.reset-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+/* Wnetrze przycisku moze zawierac tylko elementy liniowe (HTML nie pozwala
+   na <p> w <button>), wiec akapity sa spanami — a spany trzeba zlozyc
+   z powrotem w bloki. */
+.collection-row-main .collection-row-image,
+.collection-row-main .collection-row-body,
+.collection-row-main .collection-row-pl,
+.collection-row-main .collection-row-lat,
+.collection-row-main .collection-row-status,
+.collection-row-main .collection-progress { display: block; }
+.collection-row-main .collection-progress-fill { display: block; }
 .collection-row-image {
   flex: none;
   width: 52px;
@@ -812,12 +923,15 @@ body { background: var(--bg-page); }
 }
 
 /* Tydzien ksiezyca — pasek faz na najblizsze siedem dni. */
+/* Pasek tygodnia jest <ul> — czytnik ekranu mowi "lista, 7 pozycji"
+   i pozwala przejsc po dniach po kolei. */
 .moon-strip {
   display: flex;
   gap: 0.35rem;
   overflow-x: auto;
   padding: 0 1.4rem 0.9rem;
-  margin-top: -0.5rem;
+  margin: -0.5rem 0 0;
+  list-style: none;
   scrollbar-width: none;
 }
 .moon-strip::-webkit-scrollbar { display: none; }
@@ -921,10 +1035,17 @@ body { background: var(--bg-page); }
   top: 20px; left: 20px;
   font: 600 0.6rem ui-monospace, Menlo, monospace;
   letter-spacing: 0.18em;
-  color: rgba(242, 238, 228, 0.85);
-  /* Ta etykieta tez lezy na zdjeciu — na jasnym kadrze albo na beżowym
-     placeholderze w light mode gubila sie tak samo jak krzyzyk. Cien
-     zamiast zmiennej motywu, bo tlo jest nieprzewidywalne. */
+  /* Ta etykieta lezy na zdjeciu, a zdjecie moze byc dowolne — od czarnej
+     kory po biale baldachy. Sam cien tego nie ratowal: na jasnym kadrze
+     wychodzilo 1.56:1. Dlatego etykieta dostaje wlasne ciemne tlo, tak samo
+     jak przycisk zamkniecia obok. Na najjasniejszym mozliwym kadrze daje to
+     9.5:1, na najciemniejszym jeszcze wiecej. */
+  color: #F7F4EC;
+  background: rgba(38, 44, 40, 0.9);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  padding: 0.25rem 0.55rem;
+  border-radius: 20px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
   z-index: 2;
 }
@@ -994,8 +1115,15 @@ body { background: var(--bg-page); }
   color: var(--text-body);
 }
 .tag--saved { background: var(--accent-pink); color: var(--accent-pink-text); }
-.tag--month { background: var(--bg-image); }
+/* Plakietka miesiaca zbioru miala tlo placeholdera zdjecia — w ciemnym
+   motywie wychodzilo z tego 3.17:1, czyli za malo na tekst. Wlasne dwie
+   zmienne zamiast pozyczonej. */
+.tag--month { background: var(--tag-month-bg); color: var(--tag-month-text); }
 .detail-body p { line-height: 1.6; font-size: 0.88rem; margin: 0 0 0.9rem; color: var(--text-body); }
+/* Tabelka botaniczna to lista definicji (dl/dt/dd), nie dwa spany obok
+   siebie — inaczej czytnik ekranu czyta "Rodzina Astrowate Dzien wtorek"
+   jednym ciagiem, bez informacji, ktore slowo jest etykieta, a ktore
+   wartoscia. Wyglad bez zmian: dl i dd maja wyzerowane marginesy. */
 .info-box {
   background: var(--bg-surface);
   border-radius: 18px;
@@ -1003,7 +1131,7 @@ body { background: var(--bg-page); }
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem;
 }
 .info-row {
   display: flex;
@@ -1011,6 +1139,8 @@ body { background: var(--bg-page); }
   font: 400 0.82rem 'Inter', sans-serif;
   color: var(--text-main);
 }
+.info-row dt { margin: 0; }
+.info-row dd { margin: 0; color: var(--text-muted); }
 .info-row span:last-child { color: var(--text-muted); }
 .correspondences {
   display: grid;
@@ -1033,6 +1163,24 @@ body { background: var(--bg-page); }
 .note-box::placeholder { color: var(--text-muted); }
 
 /* ------------------------------------------------------------ Identify */
+/* Pole wyboru pliku jest ukryte klasa visually-hidden (a nie display: none,
+   bo tamtego nie da sie sfokusowac), czyli lezy w warstwie absolutnej —
+   etykieta musi byc dla niego ukladem odniesienia. */
+.upload-area, .upload-alt { position: relative; }
+
+/* Kontener zywego komunikatu o postepie musi istniec w drzewie ZANIM cos sie
+   w nim pojawi — czytnik ekranu ogłasza tylko zmiany wewnatrz obszaru, ktory
+   juz obserwuje. Pusty nie zajmuje miejsca. */
+.id-progress-live:empty { display: none; }
+
+.id-result-desc {
+  margin: 0.8rem 0 0;
+  color: var(--text-body);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.id-warning { margin: 0.9rem 0 0; background: var(--bg-surface); }
+
 .upload-area {
   display: flex;
   flex-direction: column;
@@ -1288,6 +1436,7 @@ body { background: var(--bg-page); }
   color: var(--text-body);
 }
 
+/* h3, ale wyglada jak etykieta — patrz HerbDetail.jsx */
 .warn-box__label {
   margin: 0 !important;
   font-size: 0.68rem !important;
@@ -1502,3 +1651,187 @@ body { background: var(--bg-page); }
 }
 
 .photo-viewer__credit a { color: inherit; }
+
+
+/* ==========================================================================
+   DOSTEPNOSC
+   Wszystko, co dotyczy obslugi klawiatura, czytnikiem ekranu i palcem
+   w rekawiczce, stoi w jednym miejscu — zeby przy kolejnej zmianie wygladu
+   dalo sie sprawdzic jednym spojrzeniem, czy czegos nie zgubiono.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- Fokus
+   Domyslna obwodka przegladarki znika pod ciemnymi tlami i zaokragleniami,
+   a w Safari na iOS bywa jej po prostu brak. Rysujemy wlasna: gruba na tyle,
+   zeby bylo ja widac na zdjeciu, i w kolorze o kontrascie ponad 3:1 wzgledem
+   podkladu, czego wymaga WCAG 2.2 (1.4.11) dla elementow nietekstowych.
+
+   :focus-visible, nie :focus — obwodka ma pojawiac sie przy obsludze
+   klawiatura, a nie po kazdym dotknieciu palcem. */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Elementy stojace na ciemnym: pasek zakladek, podglad zdjecia, przyciski
+   lezace wprost na fotografii. Tam obwodka w kolorze tekstu bylaby czarna
+   na czarnym. */
+.tab-bar :where(button):focus-visible,
+.photo-viewer :where(button, a):focus-visible,
+.close-btn:focus-visible,
+.herb-photo__zoom:focus-visible,
+.herb-card-toggle:focus-visible {
+  outline-color: var(--focus-ring-invert);
+}
+
+/* Pola tekstowe dostaja obwodke takze po kliknieciu — kursor w polu to stan,
+   ktory warto widziec niezaleznie od tego, skad sie w nim wzielo. */
+.search-box:focus,
+.search-box:focus-visible,
+.note-box:focus,
+.note-box:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Pole pliku jest schowane (display: none nie da sie sfokusowac), wiec fokus
+   laduje na etykiecie. Zaznaczamy ja tak samo jak przycisk. */
+.upload-area:has(input:focus-visible),
+.upload-alt:has(input:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------- Przeskocz do tresci
+   Bez tego obsluga klawiatura zaczyna sie od przejscia przez caly pasek
+   zakladek na kazdym ekranie. Link jest niewidoczny, dopoki nie dostanie
+   fokusu — wtedy zjezdza z gory. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  z-index: 100;
+  padding: 0.7rem 1.2rem;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-text);
+  font: 600 0.8rem 'Inter', sans-serif;
+  text-decoration: none;
+  transition: transform 0.15s ease-out;
+}
+.skip-link:focus {
+  transform: translate(-50%, 0);
+}
+
+/* --------------------------------------------------- Tresc tylko dla czytnika
+   Widoczna dla czytnika ekranu, niewidoczna na ekranie. Uzywana tam, gdzie
+   rysunek niesie znaczenie, ktorego nie da sie wyczytac z tekstu obok:
+   status suszenia, licznik zdjec, ostrzezenie na karcie. */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* Wersja, ktora wychodzi z ukrycia po zlapaniu fokusu. */
+.visually-hidden--focusable:focus,
+.visually-hidden--focusable:focus-within {
+  position: static !important;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+}
+
+/* ------------------------------------------------------ Rozmiar celu dotyku
+   WCAG 2.2 (2.5.8) wymaga 24x24 px, my dajemy 44 — appka jest uzywana
+   w terenie, zimna reka, czesto w rekawiczce. Powiekszamy SAM OBSZAR
+   klikalny pseudoelementem, nie sam przycisk: rysunek zostaje taki, jaki
+   byl, a palec trafia. */
+/* UWAGA: tylko te przyciski, ktore NIE sa juz pozycjonowane. Krzyzyk na
+   zdjeciu, przelacznik motywu, lupka i plusik na kafelku stoja na absolute
+   albo fixed — nadpisanie ich na relative wyrzucalo je poza ekran. */
+.photo-viewer__dot,
+.collection-row-remove,
+.tab-btn,
+.month-pill,
+.filter-pill {
+  position: relative;
+}
+.photo-viewer__dot::after,
+.collection-row-remove::after,
+.herb-card-toggle::after,
+.theme-toggle::after,
+.close-btn::after,
+.herb-photo__zoom::after,
+.tab-btn::after,
+.month-pill::after,
+.filter-pill::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------ Redukcja ruchu
+   Ustawienie systemowe "ogranicz ruch" ma wylaczyc animacje w calej appce,
+   nie tylko w tych trzech miejscach, w ktorych o tym pamietano. Zostawiamy
+   przejscia tla motywu — to zmiana koloru, nie ruch. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .leaf-spinner,
+  .id-progress__spinner,
+  .queue-banner__dot,
+  .photo-viewer,
+  .detail-card {
+    animation: none !important;
+  }
+  .herb-card:active,
+  .close-btn:active,
+  .theme-toggle:active,
+  .herb-photo__zoom:active {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------- Duzy kontrast
+   Gdy system prosi o wiekszy kontrast, obwodki musza byc widoczne, a nie
+   ledwie zaznaczone — zwlaszcza ramka karty i granica pola tekstowego. */
+@media (prefers-contrast: more) {
+  :root {
+    --border-soft: rgba(62, 68, 67, 0.45);
+  }
+  .theme-dark,
+  :root[data-theme="dark"] {
+    --border-soft: rgba(242, 238, 228, 0.5);
+  }
+  .search-box,
+  .note-box,
+  .filter-pill,
+  .month-pill {
+    border: 1px solid var(--border-soft);
+  }
+}

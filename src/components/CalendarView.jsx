@@ -8,6 +8,15 @@ import MoonPhase from "./MoonPhase.jsx";
 // polska odmiana odbiega od reszty liczebników.
 const dni = (n) => (n === 1 ? "1 dzień" : `${n} dni`);
 
+// Nazwy miesiecy w miejscowniku. Wczesniej naglowek sklejalo sie z mianownika
+// plus "u" — wychodzilo "Do zbioru w wrzesieńu" i "w listopadu". Na ekranie
+// razilo, a czytnik ekranu czytal to na glos slowo w slowo.
+const W_MIESIACU = [
+  "w styczniu", "w lutym", "w marcu", "w kwietniu", "w maju", "w czerwcu",
+  "w lipcu", "w sierpniu", "we wrześniu", "w październiku", "w listopadzie",
+  "w grudniu",
+];
+
 export default function CalendarView({ onOpen }) {
   const currentMonth = new Date().getMonth() + 1;
   const [selected, setSelected] = useState(currentMonth);
@@ -44,81 +53,120 @@ export default function CalendarView({ onOpen }) {
         </div>
       </div>
 
-      <div className="moon-card">
-        <div>
-          <span className="section-label" style={{ margin: 0 }}>
-            {phase.name.toUpperCase()}
-          </span>
-          <p className="moon-card-phase">
-            {phase.isFullMoon
-              ? "Pełnia dziś"
-              : `Pełnia za ${dni(phase.daysToFullMoon)}`}
-          </p>
-          <p className="moon-card-sub">
-            {momentPelni}
-            {phase.waxing ? " · czas wzrostu i nastawiania" : ""}
-          </p>
-        </div>
-        <MoonPhase
-          fraction={phase.fraction}
-          size={64}
-          className="moon-dial"
-          title={phase.name}
-        />
-      </div>
-
-      <div className="moon-strip">
-        {tydzien.map(({ data, faza, dzis }) => (
-          <div
-            key={data.toISOString()}
-            className={"moon-strip__day" + (dzis ? " moon-strip__day--today" : "")}
-            title={`${data.toLocaleDateString("pl-PL")} — ${faza.name}`}
-          >
-            <MoonPhase fraction={faza.fraction} size={30} />
-            <span className="moon-strip__label">
-              {dzis ? "dziś" : data.toLocaleDateString("pl-PL", { weekday: "short" })}
-            </span>
+      <section aria-labelledby="faza-ksiezyca">
+        <div className="moon-card">
+          <div>
+            <h2 className="section-label" id="faza-ksiezyca" style={{ margin: 0 }}>
+              {phase.name.toUpperCase()}
+            </h2>
+            <p className="moon-card-phase">
+              {phase.isFullMoon
+                ? "Pełnia dziś"
+                : `Pełnia za ${dni(phase.daysToFullMoon)}`}
+            </p>
+            <p className="moon-card-sub">
+              {momentPelni}
+              {phase.waxing ? " · czas wzrostu i nastawiania" : ""}
+            </p>
           </div>
-        ))}
-      </div>
-
-      <div className="month-scroller">
-        {MONTH_NAMES.map((m, idx) => (
-          <button
-            key={m}
-            className={
-              "month-pill" + (selected === idx + 1 ? " month-pill--active" : "")
-            }
-            onClick={() => setSelected(idx + 1)}
-          >
-            {m.slice(0, 3)}
-          </button>
-        ))}
-      </div>
-
-      {isKupala && (
-        <div className="kupala-note">
-          🌕 Noc świętojańska (Kupała), 23/24 czerwca — tradycyjnie najsilniejszy
-          czas mocy ziół: dziurawca, bylicy piołun i paproci.
+          {/* Rysunek fazy powtarza to, co stoi obok slowami, wiec dla czytnika
+              ekranu jest ozdobnikiem — inaczej "pierwsza kwadra" pada dwa razy. */}
+          <MoonPhase
+            fraction={phase.fraction}
+            size={64}
+            className="moon-dial"
+          />
         </div>
-      )}
 
-      <p className="section-label" style={{ marginTop: "1.3rem" }}>
-        Do zbioru w {MONTH_NAMES[selected - 1].toLowerCase()}u
-      </p>
+        {/* Pasek siedmiu dni. Kazdy dzien to data i nazwa fazy — sam rysunek
+            nie mowi nic osobie, ktora go nie widzi. */}
+        {/* tabIndex=0: pasek przewija sie w poziomie, a przewijalny obszar
+            bez elementu do sfokusowania jest niedostepny z klawiatury —
+            strzalkami nie da sie go ruszyc, jesli nie mozna w nim stanac. */}
+        <ul
+          className="moon-strip reset-list-row"
+          tabIndex={0}
+          aria-label="Fazy księżyca na najbliższy tydzień"
+        >
+          {tydzien.map(({ data, faza, dzis }) => (
+            <li
+              key={data.toISOString()}
+              className={"moon-strip__day" + (dzis ? " moon-strip__day--today" : "")}
+            >
+              <MoonPhase fraction={faza.fraction} size={30} />
+              <span className="moon-strip__label" aria-hidden="true">
+                {dzis ? "dziś" : data.toLocaleDateString("pl-PL", { weekday: "short" })}
+              </span>
+              <span className="visually-hidden">
+                {dzis ? "Dziś, " : ""}
+                {data.toLocaleDateString("pl-PL", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })}
+                {" — "}
+                {faza.name}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      {inSeason.length === 0 ? (
-        <p className="empty-note">
-          W tym miesiącu ziemia odpoczywa — żadne z ziół z Twojego zielnika nie
-          jest teraz w sezonie.
-        </p>
-      ) : (
-        <div className="herb-grid">
-          {inSeason.map((h) => (
-            <HerbCard key={h.id} herb={h} onOpen={onOpen} activeThisMonth />
+      <section aria-labelledby="do-zbioru">
+        <div className="month-scroller" role="group" aria-label="Wybór miesiąca">
+          {MONTH_NAMES.map((m, idx) => (
+            <button
+              key={m}
+              type="button"
+              className={
+                "month-pill" + (selected === idx + 1 ? " month-pill--active" : "")
+              }
+              aria-pressed={selected === idx + 1}
+              onClick={() => setSelected(idx + 1)}
+            >
+              <span aria-hidden="true">{m.slice(0, 3)}</span>
+              <span className="visually-hidden">{m}</span>
+            </button>
           ))}
         </div>
-      )}
+
+        {isKupala && (
+          <div className="kupala-note">
+            <span aria-hidden="true">🌕 </span>Noc świętojańska (Kupała), 23/24
+            czerwca — tradycyjnie najsilniejszy czas mocy ziół: dziurawca,
+            bylicy piołun i paproci.
+          </div>
+        )}
+
+        <h2 className="section-label" id="do-zbioru" style={{ marginTop: "1.3rem" }}>
+          Do zbioru {W_MIESIACU[selected - 1]}
+        </h2>
+
+        {/* Zmiana miesiaca przebudowuje liste, nie ruszajac fokusu. */}
+        <p className="visually-hidden" role="status">
+          {MONTH_NAMES[selected - 1]}:{" "}
+          {inSeason.length === 0
+            ? "brak roślin w sezonie"
+            : inSeason.length === 1
+            ? "1 roślina do zbioru"
+            : `${inSeason.length} roślin do zbioru`}
+        </p>
+
+        {inSeason.length === 0 ? (
+          <p className="empty-note">
+            W tym miesiącu ziemia odpoczywa — żadne z ziół z Twojego zielnika nie
+            jest teraz w sezonie.
+          </p>
+        ) : (
+          <ul className="herb-grid reset-list-grid">
+            {inSeason.map((h) => (
+              <li key={h.id}>
+                <HerbCard herb={h} onOpen={onOpen} activeThisMonth />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

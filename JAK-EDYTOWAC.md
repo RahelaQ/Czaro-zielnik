@@ -216,3 +216,69 @@ Jeśli git odmówi z powodu `index.lock` po zerwanym połączeniu:
 ```bash
 rm -f .git/index.lock
 ```
+
+---
+
+## Dostępność — zasady na dalej
+
+Od września 2026 aplikacja jest zgodna z WCAG 2.2 na poziomie AA i ma to taka zostać. Poniżej krótka lista tego, o co trzeba zadbać przy **każdej** kolejnej zmianie. Nie jest długa, bo większość rzeczy dzieje się sama, jeśli pisze się zwykły HTML.
+
+### Sprawdzenie przed wypchnięciem
+
+Przejdź nowy ekran **samym Tabem**, bez dotykania myszy ani ekranu:
+
+- widać, gdzie jesteś (gruba obwódka wokół elementu) — jeśli nie widać, coś nadpisało `outline`,
+- da się dojść wszędzie i uruchomić wszystko Enterem albo spacją,
+- z okna, które się otworzyło, wychodzi się Escape'em, a fokus wraca tam, skąd przyszedł.
+
+Na Macu: **Cmd + F5** włącza VoiceOver, ten sam skrót wyłącza. Przejdź ekran raz i posłuchaj, czy przyciski mają nazwy — „przycisk" bez nazwy to błąd.
+
+### Kolory
+
+Cała paleta siedzi w `:root` na górze `src/styles.css` i **jest policzona**. Każdy tekst ma wobec swojego tła co najmniej 4,5 : 1, każda obwódka i kreska co najmniej 3 : 1. Jeśli zmieniasz którykolwiek z tych kolorów, policz kontrast na nowo — na przykład na webaim.org/resources/contrastchecker. Zmiana „tylko o odcień" potrafi zejść poniżej progu.
+
+Najczęstsza pułapka: pożyczanie zmiennej od czegoś innego. Plakietka „Zbiór: maj" miała kiedyś tło placeholdera zdjęcia i w ciemnym motywie wychodziło z tego 3,17 : 1. Dlatego ma teraz własne `--tag-month-bg` i `--tag-month-text`.
+
+### Nowy przycisk
+
+```jsx
+<button type="button" onClick={...} aria-label="Usuń rumianek z Moich Zbiorów">
+  <span aria-hidden="true">✕</span>
+</button>
+```
+
+- `type="button"` zawsze — bez tego przycisk w formularzu wysyła formularz,
+- przycisk z samym znaczkiem albo ikoną **musi** mieć `aria-label` mówiący, co robi i czego dotyczy („Usuń", bez nazwy rośliny, nic nie mówi, gdy takich przycisków jest dwanaście),
+- sam znaczek dostaje `aria-hidden="true"` — „✕" czytnik ekranu przeczytałby jako „litera iks".
+
+### Czego nie wolno w `<button>`
+
+W przycisku nie mogą stać `<p>`, `<h2>` ani drugi `<button>`. Zamiast akapitów — `<span>` z `display: block` w CSS. Jeśli wiersz ma dwie akcje (otwórz i usuń), to są dwa przyciski obok siebie, a nie jeden w drugim.
+
+### Ikony i rysunki
+
+Ikony z `Icons.jsx` mają `aria-hidden` domyślnie — są ozdobą przy podpisie słowami. Jeśli rysunek niesie informację, której nigdzie indziej nie ma (jak faza księżyca w pasku tygodnia), dołóż obok tekst w `<span className="visually-hidden">`.
+
+### Zdjęcia
+
+`<HerbImage>` sam pisze opis alternatywny. Gdy stoi wewnątrz przycisku, który i tak nazywa się nazwą rośliny, podaj `decorative` — inaczej czytnik ekranu powtarza nazwę dwa razy.
+
+### Coś się zmieniło na ekranie bez kliknięcia
+
+Jeśli zmiana filtru, przyjście wyniku albo błąd zmienia treść, a fokus zostaje na miejscu, czytnik ekranu o tym nie wie. Trzeba mu powiedzieć:
+
+- `role="status"` — spokojna informacja, doczyta po skończeniu zdania („12 roślin na liście"),
+- `role="alert"` — przerywa w pół słowa; tylko dla błędów,
+- kontener musi istnieć w drzewie **zanim** coś się w nim pojawi (stąd pusty `.id-progress-live` na ekranie „Rozpoznaj").
+
+### Nowe okno modalne
+
+Użyj `useDialog` z `src/hooks/useDialog.js` — to on trzyma fokus w środku, obsługuje Escape, blokuje przewijanie tła i oddaje fokus tam, skąd przyszedł. Do tego `role="dialog"`, `aria-modal="true"` i `aria-labelledby` wskazujące na nagłówek okna.
+
+### Rozmiar celu dotyku
+
+Każdy przycisk ma co najmniej 44 × 44 px obszaru klikalnego — appka jest używana w terenie, zimną ręką. Jeśli rysunek ma być mniejszy, nie powiększaj przycisku: dopisz go do listy przy `::after` w sekcji DOSTĘPNOŚĆ na końcu `styles.css`, która dokłada niewidoczny margines dotyku. **Uwaga:** ta lista ustawia `position: relative`, więc nie wpisuj tam przycisków, które już stoją na `absolute` albo `fixed` — wylecą poza ekran.
+
+### Automatyczne sprawdzenie
+
+Rozszerzenie **axe DevTools** albo **WAVE** w przeglądarce, na `npm run dev`. Przejdź nim wszystkie pięć ekranów, w jasnym i w ciemnym motywie, plus otwartą kartę rośliny. Stan na wrzesień 2026: zero naruszeń na każdym z nich.

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import HerbImage from "./HerbImage.jsx";
 import PhotoViewer from "./PhotoViewer.jsx";
+import { useDialog } from "../hooks/useDialog.js";
 import { useHerbNote } from "../hooks/useHerbNote.js";
 import { HERBS, MONTH_NAMES } from "../data/herbs.js";
 
@@ -17,6 +18,14 @@ export default function HerbDetail({ herb, onClose, collection }) {
   // Lista zdjęć otwarta w podglądzie pełnoekranowym (null = zamknięty).
   const [podglad, setPodglad] = useState(null);
 
+  // Karta jest oknem modalnym: trzyma fokus, zamyka sie Escape i oddaje
+  // fokus tam, skad ja otwarto. Patrz hooks/useDialog.js.
+  const kartaRef = useDialog(onClose);
+
+  const uid = useId();
+  const titleId = `karta-${uid}`;
+  const noteId = `notatka-${uid}`;
+
   useEffect(() => setDraft(note), [note]);
 
   const saved = collection ? collection.isSaved(herb.id) : false;
@@ -32,11 +41,23 @@ export default function HerbDetail({ herb, onClose, collection }) {
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="detail-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="detail-card"
+        ref={kartaRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="detail-image-wrap">
           <span className="detail-archive-label">{archiveLabel(herb)}</span>
-          <button className="close-btn" onClick={onClose} aria-label="Zamknij">
-            ×
+          <button
+            type="button"
+            className="close-btn"
+            onClick={onClose}
+            aria-label="Zamknij kartę rośliny"
+          >
+            <span aria-hidden="true">×</span>
           </button>
           <HerbImage
             id={herb.id}
@@ -51,7 +72,12 @@ export default function HerbDetail({ herb, onClose, collection }) {
           <div className="detail-title-row">
             <div>
               <p className="eyebrow">{herb.nameLat}</p>
-              <h2>{herb.namePl}</h2>
+              {/* Nazwa lacinska stoi nad polska, ale to nazwa polska jest
+                  tytulem tej karty — i to ona zapowiada okno czytnikowi. */}
+              <h2 id={titleId}>
+                {herb.namePl}
+                <span className="visually-hidden">, {herb.nameLat}</span>
+              </h2>
             </div>
           </div>
 
@@ -61,7 +87,12 @@ export default function HerbDetail({ herb, onClose, collection }) {
                 MOJE ZBIORY
               </span>
             )}
-            {herb.zywiol && <span className="tag">{herb.zywiol}</span>}
+            {herb.zywiol && (
+              <span className="tag">
+                <span className="visually-hidden">Żywioł: </span>
+                {herb.zywiol}
+              </span>
+            )}
             {herb.months?.length > 0 && (
               <span className="tag tag--month">
                 Zbiór: {herb.months.map((m) => MONTH_NAMES[m - 1]).join(", ")}
@@ -71,7 +102,7 @@ export default function HerbDetail({ herb, onClose, collection }) {
 
           {herb.part && (
             <>
-              <p className="section-label">Część rośliny i termin</p>
+              <h3 className="section-label">Część rośliny i termin</h3>
               <p>{herb.part}</p>
             </>
           )}
@@ -81,7 +112,7 @@ export default function HerbDetail({ herb, onClose, collection }) {
               szuka po nich tak samo jak po nazwie łacińskiej. */}
           {herb.nazwyLudowe?.nazwy?.length > 0 && (
             <>
-              <p className="section-label">Nazwy ludowe</p>
+              <h3 className="section-label">Nazwy ludowe</h3>
               <p className="folk-names">
                 {herb.nazwyLudowe.nazwy.join(" · ")}
               </p>
@@ -92,17 +123,20 @@ export default function HerbDetail({ herb, onClose, collection }) {
             </>
           )}
 
-          <p className="section-label">Moc i symbolika</p>
+          <h3 className="section-label">Moc i symbolika</h3>
           <p>{herb.moc}</p>
 
           {/* Jak mocny jest zapis tej tradycji. Bez tego zielnik zrównuje
               rzecz udokumentowaną u Kolberga z powtarzanką z internetu. */}
           {herb.zrodlo && <p className="zrodlo-note">Zapis: {herb.zrodlo}</p>}
 
-          {/* Ostrzeżenie o samej roślinie — toksyczność, interakcje z lekami. */}
+          {/* Ostrzeżenie o samej roślinie — toksyczność, interakcje z lekami.
+              role="note" i naglowek zamiast zwyklego akapitu: czytnik ekranu
+              ma powiedziec, ze to ostrzezenie, zanim przeczyta tresc, a nie
+              po niej. Dla osoby stojacej nad roslina to cala roznica. */}
           {herb.uwaga && (
-            <div className="warn-box warn-box--plant">
-              <p className="warn-box__label">Uwaga</p>
+            <div className="warn-box warn-box--plant" role="note">
+              <h3 className="warn-box__label">Uwaga</h3>
               <p>{herb.uwaga}</p>
             </div>
           )}
@@ -110,8 +144,8 @@ export default function HerbDetail({ herb, onClose, collection }) {
           {/* Sobowtór. To jedyna sekcja w całej appce, która realnie ratuje
               zdrowie — dlatego jest wyżej niż tabelka botaniczna. */}
           {herb.sobowtor && (
-            <div className="warn-box warn-box--lookalike">
-              <p className="warn-box__label">Można pomylić z</p>
+            <div className="warn-box warn-box--lookalike" role="note">
+              <h3 className="warn-box__label">Można pomylić z</h3>
               <p className="lookalike-name">
                 {herb.sobowtor.namePl}{" "}
                 <span className="lookalike-lat">{herb.sobowtor.nameLat}</span>
@@ -126,40 +160,49 @@ export default function HerbDetail({ herb, onClose, collection }) {
           )}
 
           {(herb.dzien || herb.zywiol || herb.rodzina) && (
-            <div className="info-box">
-              {herb.rodzina && (
-                <div className="info-row">
-                  <span>Rodzina</span>
-                  <span>{herb.rodzina}</span>
-                </div>
-              )}
-              {herb.dzien && (
-                <div className="info-row">
-                  <span>Dzień</span>
-                  <span>{herb.dzien}</span>
-                </div>
-              )}
-              {herb.zywiol && (
-                <div className="info-row">
-                  <span>Żywioł</span>
-                  <span>{herb.zywiol}</span>
-                </div>
-              )}
-            </div>
+            <>
+              <h3 className="visually-hidden">Dane botaniczne i tradycyjne</h3>
+              <dl className="info-box">
+                {herb.rodzina && (
+                  <div className="info-row">
+                    <dt>Rodzina</dt>
+                    <dd>{herb.rodzina}</dd>
+                  </div>
+                )}
+                {herb.dzien && (
+                  <div className="info-row">
+                    <dt>Dzień</dt>
+                    <dd>{herb.dzien}</dd>
+                  </div>
+                )}
+                {herb.zywiol && (
+                  <div className="info-row">
+                    <dt>Żywioł</dt>
+                    <dd>{herb.zywiol}</dd>
+                  </div>
+                )}
+              </dl>
+            </>
           )}
 
           {collection && (
             <button
+              type="button"
               className={saved ? "btn-outline" : "btn-primary"}
               style={{ width: "100%", marginBottom: "1rem" }}
               onClick={handleToggle}
             >
-              {saved ? "✓ W Moich Zbiorach — usuń" : "+ Dodaj do moich zbiorów"}
+              {saved
+                ? `✓ W Moich Zbiorach — usuń ${herb.namePl}`
+                : `+ Dodaj ${herb.namePl} do moich zbiorów`}
             </button>
           )}
 
-          <p className="section-label">Twoje notatki</p>
+          <h3 className="section-label">
+            <label htmlFor={noteId}>Twoje notatki</label>
+          </h3>
           <textarea
+            id={noteId}
             className="note-box"
             placeholder="np. gdzie znalazłam, kiedy zebrałam, efekty..."
             value={draft}

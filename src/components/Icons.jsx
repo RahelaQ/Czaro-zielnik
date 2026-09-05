@@ -1,5 +1,12 @@
 import React from "react";
 
+// Ikony sa tu wylacznie ozdobnikiem: kazda stoi obok podpisu slowami albo
+// w przycisku, ktory ma wlasna etykiete. Domyslne aria-hidden zdejmuje je
+// z drzewa dostepnosci, a focusable="false" wypycha je z kolejnosci Tab —
+// w Internet Explorerze i starszym Edge kazdy <svg> lapal fokus, przez co
+// przejscie przez pasek zakladek wymagalo dwa razy wiecej klawiszy.
+// Gdziekolwiek ikona ma cos znaczyc sama, wystarczy podac role="img"
+// i aria-label w propsach — nadpisza te domyslne.
 const common = {
   viewBox: "0 0 24 24",
   fill: "none",
@@ -7,6 +14,8 @@ const common = {
   strokeWidth: 1.6,
   strokeLinecap: "round",
   strokeLinejoin: "round",
+  "aria-hidden": "true",
+  focusable: "false",
 };
 
 export function LeafIcon(props) {

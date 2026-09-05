@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { HERBS } from "./data/herbs.js";
 import HerbDetail from "./components/HerbDetail.jsx";
 import CalendarView from "./components/CalendarView.jsx";
@@ -30,6 +30,16 @@ const TABS = [
   { id: "rozpoznaj", label: "Rozpoznaj", Icon: CameraIcon },
 ];
 
+// Nazwy ekranow do zapowiedzi dla czytnika ekranu. Zakladka "zbiory" nie ma
+// swojego przycisku w pasku, ale ekran ma — i tez musi sie zapowiedziec.
+const NAZWY_EKRANOW = {
+  home: "Zielnik",
+  biblioteka: "Biblioteka",
+  zbiory: "Moje zbiory",
+  kalendarz: "Kalendarz",
+  rozpoznaj: "Rozpoznaj",
+};
+
 export default function App() {
   const [tab, setTab] = useState("home");
   const [opened, setOpened] = useState(null);
@@ -39,6 +49,22 @@ export default function App() {
   // Kolejka zyje na poziomie appki, nie zakladki — zdjecie zrobione bez
   // zasiegu ma sie rozpoznac samo takze wtedy, gdy jestes akurat w Kalendarzu.
   const queue = useIdentifyQueue();
+
+  const mainRef = useRef(null);
+  const pierwszyRender = useRef(true);
+
+  // Przelaczenie zakladki podmienia CALA tresc strony, ale nie przewija jej
+  // ani nie rusza fokusu — obslugujac appke klawiatura zostawalo sie w pasku
+  // zakladek, a czytnik ekranu nie mowil nic. Przenosimy fokus na poczatek
+  // nowego ekranu, tak jak robi to przejscie na inna strone.
+  useEffect(() => {
+    if (pierwszyRender.current) {
+      pierwszyRender.current = false;
+      return;
+    }
+    mainRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [tab]);
 
   const herbById = useMemo(
     () => Object.fromEntries(HERBS.map((h) => [h.id, h])),
@@ -94,57 +120,77 @@ export default function App() {
       .slice(0, 3);
   }, [recent.items, herbById]);
 
+  // Gdy karta rosliny stoi otwarta, tlo przestaje istniec dla klawiatury
+  // i dla czytnika ekranu. Bez tego dalo sie przejsc Tabem "za" okno.
+  const tloWylaczone = opened ? "" : undefined;
+
   return (
     <div className="app-root">
-      <ThemeToggle preference={theme.preference} onCycle={theme.cycle} />
+      {/* Pierwszy element w kolejnosci Tab. Niewidoczny, dopoki nie dostanie
+          fokusu — wtedy pozwala ominac pasek zakladek i wejsc wprost w tresc. */}
+      <a className="skip-link" href="#tresc">
+        Przejdź do treści
+      </a>
 
-      {tab === "home" && (
-        <HomeView
-          onOpen={openHerb}
-          onNavigate={setTab}
-          collectionCount={collection.items.length}
-          recentHerbs={recentHerbs}
-        />
-      )}
+      <div inert={tloWylaczone}>
+        <ThemeToggle preference={theme.preference} onCycle={theme.cycle} />
 
-      {tab === "biblioteka" && (
-        <LibraryView onOpen={openHerb} collection={collection} />
-      )}
+        <main
+          id="tresc"
+          ref={mainRef}
+          tabIndex={-1}
+          aria-label={NAZWY_EKRANOW[tab]}
+        >
+          {tab === "home" && (
+            <HomeView
+              onOpen={openHerb}
+              onNavigate={setTab}
+              collectionCount={collection.items.length}
+              recentHerbs={recentHerbs}
+            />
+          )}
 
-      {tab === "zbiory" && (
-        <MyCollectionView
-          herbs={myHerbs}
-          onOpen={openHerb}
-          collection={collection}
-          onNavigate={setTab}
-        />
-      )}
+          {tab === "biblioteka" && (
+            <LibraryView onOpen={openHerb} collection={collection} />
+          )}
 
-      {tab === "kalendarz" && <CalendarView onOpen={openHerb} />}
+          {tab === "zbiory" && (
+            <MyCollectionView
+              herbs={myHerbs}
+              onOpen={openHerb}
+              collection={collection}
+              onNavigate={setTab}
+            />
+          )}
 
-      {tab === "rozpoznaj" && (
-        <IdentifyView
-          queue={queue}
-          herbById={herbById}
-          onOpenHerb={openHerb}
-          onNavigate={setTab}
-          collection={collection}
-        />
-      )}
+          {tab === "kalendarz" && <CalendarView onOpen={openHerb} />}
 
-      <nav className="tab-bar">
-        {TABS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            className={tab === id ? "tab-btn tab-btn--active" : "tab-btn"}
-            onClick={() => setTab(id)}
-            aria-current={tab === id ? "page" : undefined}
-          >
-            <Icon />
-            <span>{label}</span>
-          </button>
-        ))}
-      </nav>
+          {tab === "rozpoznaj" && (
+            <IdentifyView
+              queue={queue}
+              herbById={herbById}
+              onOpenHerb={openHerb}
+              onNavigate={setTab}
+              collection={collection}
+            />
+          )}
+        </main>
+
+        <nav className="tab-bar" aria-label="Główne ekrany">
+          {TABS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className={tab === id ? "tab-btn tab-btn--active" : "tab-btn"}
+              onClick={() => setTab(id)}
+              aria-current={tab === id ? "page" : undefined}
+            >
+              <Icon aria-hidden="true" focusable="false" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
 
       {opened && (
         <HerbDetail

@@ -1,12 +1,23 @@
-import React, { useMemo, useState } from "react";
+import React, { useId, useMemo, useState } from "react";
 import HerbImage from "./HerbImage.jsx";
 
 const DRYING_DAYS = 7;
 const ROMAN_MONTHS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+const MIESIACE = [
+  "stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
+  "lipca", "sierpnia", "września", "października", "listopada", "grudnia",
+];
 
 function formatDatePl(ts) {
   const d = new Date(ts);
   return `${d.getDate()} ${ROMAN_MONTHS[d.getMonth()]}`;
+}
+
+// Data zapisana cyframi rzymskimi jest czytelna okiem, ale czytnik ekranu
+// mowi "5 iks" zamiast "5 pazdziernika". Dla niego trzymamy wersje slowna.
+function dataSlowem(ts) {
+  const d = new Date(ts);
+  return `${d.getDate()} ${MIESIACE[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 // "Schnie" przez pierwsze DRYING_DAYS dni od dodania, potem "gotowe" —
@@ -19,12 +30,16 @@ function dryingStatus(addedAt) {
     return {
       status: "schnie",
       label: `schnie · dzień ${day} z ${DRYING_DAYS}`,
+      opis: `Schnie, dzień ${day} z ${DRYING_DAYS}`,
+      dzien: day,
       progress: day / DRYING_DAYS,
     };
   }
   return {
     status: "gotowe",
     label: `gotowe · zebrane ${formatDatePl(addedAt)}`,
+    opis: `Gotowe, zebrane ${dataSlowem(addedAt)}`,
+    dzien: DRYING_DAYS,
     progress: 1,
   };
 }
@@ -35,6 +50,8 @@ function dryingStatus(addedAt) {
 export default function MyCollectionView({ herbs, onOpen, collection, onNavigate }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("wszystko");
+  const uid = useId();
+  const searchId = `szukaj-zbiory-${uid}`;
 
   const withStatus = useMemo(
     () => herbs.map((h) => ({ herb: h, ...dryingStatus(h.addedAt) })),
@@ -60,20 +77,31 @@ export default function MyCollectionView({ herbs, onOpen, collection, onNavigate
           <h1>Moje zbiory</h1>
           <p>Twoja prywatna baza roślin</p>
         </div>
-        <button className="pill-btn" onClick={() => onNavigate?.("biblioteka")}>
-          + Dodaj
+        <button
+          type="button"
+          className="pill-btn"
+          onClick={() => onNavigate?.("biblioteka")}
+        >
+          + Dodaj<span className="visually-hidden"> roślinę z Biblioteki</span>
         </button>
       </div>
 
       {herbs.length > 0 && (
         <>
+          <label className="visually-hidden" htmlFor={searchId}>
+            Szukaj wśród {herbs.length} zebranych roślin
+          </label>
           <input
+            id={searchId}
+            type="search"
             className="search-box"
             placeholder={`Szukaj wśród ${herbs.length} pozycji`}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <div className="filter-row">
+          {/* aria-pressed, nie aria-current: to nie jest nawigacja, tylko
+              przelacznik, ktory zostaje wcisniety. */}
+          <div className="filter-row" role="group" aria-label="Filtr stanu suszenia">
             {[
               ["wszystko", "Wszystko"],
               ["schnie", "Schnie"],
@@ -81,9 +109,11 @@ export default function MyCollectionView({ herbs, onOpen, collection, onNavigate
             ].map(([key, label]) => (
               <button
                 key={key}
+                type="button"
                 className={
                   "filter-pill" + (filter === key ? " filter-pill--active" : "")
                 }
+                aria-pressed={filter === key}
                 onClick={() => setFilter(key)}
               >
                 {label}
@@ -93,6 +123,16 @@ export default function MyCollectionView({ herbs, onOpen, collection, onNavigate
         </>
       )}
 
+      {/* Zmiana filtra albo wpisanie litery przebudowuje liste, ale nie rusza
+          fokusu — bez tego komunikatu czytnik ekranu nie mowi, ile zostalo. */}
+      {herbs.length > 0 && (
+        <p className="visually-hidden" role="status">
+          {filtered.length === 1
+            ? "1 roślina na liście"
+            : `${filtered.length} roślin na liście`}
+        </p>
+      )}
+
       {herbs.length === 0 ? (
         <p className="empty-note" style={{ margin: "0.6rem 1.4rem" }}>
           Nie masz jeszcze żadnych roślin w swoich zbiorach. Rozpoznaj roślinę
@@ -100,42 +140,62 @@ export default function MyCollectionView({ herbs, onOpen, collection, onNavigate
         </p>
       ) : (
         <div className="collection-list">
-          {filtered.map(({ herb, status, label, progress }) => (
-            <button
-              key={herb.id}
-              className="collection-row"
-              onClick={() => onOpen(herb)}
-            >
-              <div className="collection-row-image">
-                <HerbImage id={herb.id} title={herb.wiki} namePl={herb.namePl} nameLat={herb.nameLat} />
-              </div>
-              <div className="collection-row-body">
-                <p className="collection-row-pl">{herb.namePl}</p>
-                <p className="collection-row-lat">{herb.nameLat}</p>
-                {status === "schnie" && (
-                  <div className="collection-progress">
-                    <div
-                      className="collection-progress-fill"
-                      style={{ width: `${Math.round(progress * 100)}%` }}
+          <ul className="reset-list">
+            {filtered.map(({ herb, status, label, opis, dzien, progress }) => (
+              <li key={herb.id} className="collection-row">
+                <button
+                  type="button"
+                  className="collection-row-main"
+                  onClick={() => onOpen(herb)}
+                >
+                  <span className="collection-row-image">
+                    <HerbImage
+                      id={herb.id}
+                      title={herb.wiki}
+                      namePl={herb.namePl}
+                      nameLat={herb.nameLat}
+                      decorative
                     />
-                  </div>
-                )}
-                <p className="collection-row-status">{label}</p>
-              </div>
-              <span
-                className="collection-row-remove"
-                role="button"
-                aria-label="Usuń z Moich Zbiorów"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  collection.remove(herb.id);
-                }}
-              >
-                ✕
-              </span>
-            </button>
-          ))}
+                  </span>
+                  <span className="collection-row-body">
+                    <span className="collection-row-pl">{herb.namePl}</span>
+                    <span className="collection-row-lat">{herb.nameLat}</span>
+                    {status === "schnie" && (
+                      <span
+                        className="collection-progress"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={DRYING_DAYS}
+                        aria-valuenow={dzien}
+                        aria-valuetext={`Dzień ${dzien} z ${DRYING_DAYS} suszenia`}
+                      >
+                        <span
+                          className="collection-progress-fill"
+                          style={{ width: `${Math.round(progress * 100)}%` }}
+                        />
+                      </span>
+                    )}
+                    {/* Na ekranie skrot z kropka i data rzymska, dla czytnika
+                        pelne zdanie — ta sama informacja, dwa zapisy. */}
+                    <span className="collection-row-status" aria-hidden="true">
+                      {label}
+                    </span>
+                    <span className="visually-hidden">{opis}</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="collection-row-remove"
+                  aria-label={`Usuń ${herb.namePl} z Moich Zbiorów`}
+                  onClick={() => collection.remove(herb.id)}
+                >
+                  <span aria-hidden="true">✕</span>
+                </button>
+              </li>
+            ))}
+          </ul>
           <button
+            type="button"
             className="collection-add-cta"
             onClick={() => onNavigate?.("rozpoznaj")}
           >
