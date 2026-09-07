@@ -1464,6 +1464,59 @@ body { background: var(--bg-page); }
   line-height: 1.5;
 }
 
+/* --------------------------------------------------------- Drobny druk
+   Nota edukacyjna i zrodla na koncu karty rosliny. Ma byc czytelna, a nie
+   niewidoczna: 0.72rem to maly stopien pisma, ale --text-muted trzyma wobec
+   powierzchni karty ponad 4,5 : 1, wiec wymog kontrastu jest spelniony.
+   Nie zmniejszaj tego dalej i nie podmieniaj koloru na jasniejszy. */
+
+.card-legal {
+  margin: 1.6rem 0 0.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.card-legal p,
+.detail-body .card-legal p {
+  margin: 0 0 0.5rem;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.card-legal__more { margin-top: 0.35rem; }
+
+.card-legal__more > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0;
+  color: var(--text-body);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.card-legal__more > summary::-webkit-details-marker { display: none; }
+.card-legal__more > summary::before {
+  content: "▸";
+  display: inline-block;
+  font-size: 0.9em;
+  transition: transform 0.15s ease;
+}
+.card-legal__more[open] > summary::before { transform: rotate(90deg); }
+
+.card-legal__list { margin: 0.4rem 0 0; }
+.card-legal__row { margin: 0 0 0.75rem; }
+.card-legal__row dt {
+  margin: 0 0 0.15rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+.card-legal__row dd { margin: 0; }
+
 .warn-box {
   margin: 1rem 0 0;
   padding: 0.85rem 1rem;
