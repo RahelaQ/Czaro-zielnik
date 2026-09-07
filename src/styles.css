@@ -1120,6 +1120,34 @@ body { background: var(--bg-page); }
    zmienne zamiast pozyczonej. */
 .tag--month { background: var(--tag-month-bg); color: var(--tag-month-text); }
 .detail-body p { line-height: 1.6; font-size: 0.88rem; margin: 0 0 0.9rem; color: var(--text-body); }
+
+/* ---------------------------------------------- Akapity z wlasnym wygladem
+   Regula wyzej ma specyficznosc (0,1,1) i bije KAZDA pojedyncza klase (0,1,0)
+   postawiona na akapicie wewnatrz karty. Przez to nazwa lacinska i nazwy
+   ludowe rysowaly sie stopniem i kolorem tekstu ciaglego, choc obie klasy
+   deklaruja co innego — a ta sama klasa .eyebrow uzyta na ekranie "Rozpoznaj",
+   poza karta, wygladala jak nalezy. Jedna klasa, dwa wyglady: blad, nie
+   decyzja.
+
+   Podwojenie selektora (".eyebrow, p.eyebrow") tu NIE wystarcza: daje remis
+   (0,1,1), a przy remisie wygrywa regula stojaca pozniej w pliku — czyli
+   nadal ta powyzej. Stad ".detail-body p.klasa" (0,2,1) i stad ten blok stoi
+   tuz pod nia, a nie przy definicjach klas.
+
+   Dokladajac tu cokolwiek: sprawdz w inspektorze, czy regula weszla. Sama
+   klasa nie wystarczy. */
+.detail-body p.eyebrow {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0 0 0.15rem;
+}
+.detail-body p.folk-names {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  margin: 0 0 0.4rem;
+}
 /* Tabelka botaniczna to lista definicji (dl/dt/dd), nie dwa spany obok
    siebie — inaczej czytnik ekranu czyta "Rodzina Astrowate Dzien wtorek"
    jednym ciagiem, bez informacji, ktore slowo jest etykieta, a ktore
