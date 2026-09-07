@@ -1340,6 +1340,15 @@ body { background: var(--bg-page); }
   outline-offset: 2px;
 }
 
+/* To samo na ekranie "Rozpoznaj": tam rowniez fokus lapie ukryte pole pliku,
+   a widac go bylo dotad wylacznie po domyslnej obwodce przegladarki, czyli
+   w praktyce wcale. */
+.upload-area:focus-within,
+.upload-alt:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 /* ==========================================================================
    ROZPOZNAWANIE — postep, kolejka, bledy
    ========================================================================== */
@@ -1456,7 +1465,13 @@ body { background: var(--bg-page); }
    OSTRZEZENIA I SOBOWTORY
    ========================================================================== */
 
-.zrodlo-note {
+/* Selektor jest podwojony celowo. Sama klasa .zrodlo-note (0,1,0) przegrywala
+   specyficznoscia z ".detail-body p" (0,1,1) i deklarowany tu stopien pisma
+   oraz kolor nigdy sie nie stosowaly — linia "Zapis:" wygladala dokladnie jak
+   tekst ciagly, choc mialaby byc drobnym drukiem. Kursywa dzialala, bo
+   font-style nie stoi w tamtej regule; stad zludzenie, ze wszystko gra. */
+.zrodlo-note,
+p.zrodlo-note {
   margin: 0.5rem 0 0;
   color: var(--text-muted);
   font-size: 0.74rem;
