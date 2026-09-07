@@ -71,7 +71,15 @@ export default function App() {
     []
   );
 
+  // Przycisk, z ktorego otwarto karte. Lapiemy go TUTAJ, w obsludze
+  // klikniecia, a nie w samym oknie: zaraz po setOpened tlo dostaje `inert`,
+  // a inert odbiera fokus swoim potomkom — czyli temu przyciskowi. Dluzszy
+  // komentarz stoi w hooks/useDialog.js.
+  const wyzwalacz = useRef(null);
+
   const openHerb = (herb) => {
+    wyzwalacz.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setOpened(herb);
     recent.recordView(herb);
   };
@@ -197,6 +205,7 @@ export default function App() {
           herb={opened}
           onClose={() => setOpened(null)}
           collection={collection}
+          wracamyDo={wyzwalacz.current}
         />
       )}
     </div>

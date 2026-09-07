@@ -12,7 +12,7 @@ function archiveLabel(herb) {
   return `ARCHIWUM BOTANICZNE · ${num}`;
 }
 
-export default function HerbDetail({ herb, onClose, collection }) {
+export default function HerbDetail({ herb, onClose, collection, wracamyDo }) {
   const { note, setNote } = useHerbNote(herb.id);
   const [draft, setDraft] = useState(note);
   // Lista zdjęć otwarta w podglądzie pełnoekranowym (null = zamknięty).
@@ -20,7 +20,7 @@ export default function HerbDetail({ herb, onClose, collection }) {
 
   // Karta jest oknem modalnym: trzyma fokus, zamyka sie Escape i oddaje
   // fokus tam, skad ja otwarto. Patrz hooks/useDialog.js.
-  const kartaRef = useDialog(onClose);
+  const kartaRef = useDialog(onClose, wracamyDo);
 
   const uid = useId();
   const titleId = `karta-${uid}`;
