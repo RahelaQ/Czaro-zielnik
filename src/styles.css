@@ -1298,6 +1298,49 @@ body { background: var(--bg-page); }
 .theme-toggle:active { transform: scale(0.94); }
 
 /* ==========================================================================
+   SKROT DO APARATU NA EKRANIE GLOWNYM
+
+   Ten sam ksztalt i ta sama wysokosc co przelacznik motywu, tuz na lewo od
+   niego — dwa kolka w gornym prawym rogu czytaja sie jako para narzedzi,
+   a nie jako dwa przypadkowe przyciski.
+
+   position: fixed, tak jak przelacznik: dzieki temu oba stoja na jednej linii
+   niezaleznie od wysokosci wiersza ze znakiem, i aparat zostaje pod kciukiem
+   takze po przewinieciu ekranu glownego w dol. Renderuje sie tylko w HomeView,
+   wiec na pozostalych ekranach go nie ma.
+   ========================================================================== */
+
+.quick-cam {
+  position: fixed;
+  top: calc(1.2rem + env(safe-area-inset-top));
+  /* odstep od krawedzi + szerokosc przelacznika + przerwa miedzy nimi */
+  right: calc(1.4rem + 34px + 0.55rem);
+  z-index: 40;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--icon-stroke);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quick-cam:active { transform: scale(0.94); }
+
+/* Kontrolka to ukryte pole pliku w srodku, nie sam <label> — obwodke fokusu
+   trzeba wiec narysowac na rodzicu. Bez tego przejscie Tabem po ekranie
+   glownym mijaloby aparat niewidocznie. */
+.quick-cam:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
    ROZPOZNAWANIE — postep, kolejka, bledy
    ========================================================================== */
 
@@ -1773,6 +1816,7 @@ body { background: var(--bg-page); }
 .collection-row-remove::after,
 .herb-card-toggle::after,
 .theme-toggle::after,
+.quick-cam::after,
 .close-btn::after,
 .herb-photo__zoom::after,
 .tab-btn::after,

@@ -27,6 +27,8 @@ export default function IdentifyView({
   onNavigate,
   collection,
   queue,
+  initialFile,
+  onInitialFileTaken,
 }) {
   const [preview, setPreview] = useState(null);
   const [stage, setStage] = useState(null); // compress | upload | wait | null
@@ -52,11 +54,10 @@ export default function IdentifyView({
     setStats(null);
   };
 
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // żeby dało się wybrać to samo zdjęcie drugi raz
-    if (!file) return;
-
+  // Przetwarzanie stoi osobno od obslugi zdarzenia, bo zdjecie przychodzi tu
+  // dwoma droganmi: z pol pliku na tym ekranie i ze skrotu aparatu na ekranie
+  // glownym, ktory podaje gotowy File, bez zdarzenia.
+  const przetworzZdjecie = async (file) => {
     reset();
     setStage("compress");
 
@@ -107,6 +108,26 @@ export default function IdentifyView({
       setError({ kind, queued: canQueue });
     }
   };
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // żeby dało się wybrać to samo zdjęcie drugi raz
+    if (file) przetworzZdjecie(file);
+  };
+
+  // Zdjecie zrobione skrotem na ekranie glownym. Bierzemy je raz i od razu
+  // meldujemy, ze zostalo wziete — inaczej powrot na ten ekran (np. z
+  // Kalendarza) rozpoznawalby to samo zdjecie jeszcze raz i zjadal limit.
+  // Ref pilnuje tego takze w trybie scislym Reacta, ktory w developmencie
+  // uruchamia efekty dwa razy.
+  const wzieteZeSkrotu = useRef(null);
+  useEffect(() => {
+    if (!initialFile || wzieteZeSkrotu.current === initialFile) return;
+    wzieteZeSkrotu.current = initialFile;
+    onInitialFileTaken?.();
+    przetworzZdjecie(initialFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   const matched = result?.zielnikId ? herbById[result.zielnikId] : null;
   const alreadySaved = matched ? collection.isSaved(matched.id) : false;
