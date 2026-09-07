@@ -1169,9 +1169,15 @@ body { background: var(--bg-page); }
 .upload-area, .upload-alt { position: relative; }
 
 /* Kontener zywego komunikatu o postepie musi istniec w drzewie ZANIM cos sie
-   w nim pojawi — czytnik ekranu ogłasza tylko zmiany wewnatrz obszaru, ktory
-   juz obserwuje. Pusty nie zajmuje miejsca. */
-.id-progress-live:empty { display: none; }
+   w nim pojawi — czytnik ekranu oglasza tylko zmiany wewnatrz obszaru, ktory
+   juz obserwuje.
+   Stalo tu `.id-progress-live:empty { display: none; }` i to bylo dokladne
+   zaprzeczenie powyzszego zdania: element z display: none nie istnieje
+   w drzewie dostepnosci, wiec czytnik zaczynal obserwowac ten obszar dopiero
+   w chwili, gdy pojawial sie w nim tekst — a pierwszej zmiany w swiezo
+   dodanym obszarze wiekszosc czytnikow nie oglasza. Regula miala chronic
+   przed odstepem po pustym kontenerze; zmierzone: pusty ma zero wysokosci,
+   zero marginesu i zero wypelnienia, wiec nie ma czego chowac. */
 
 .id-result-desc {
   margin: 0.8rem 0 0;
