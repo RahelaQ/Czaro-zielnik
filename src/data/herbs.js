@@ -265,6 +265,11 @@ export const HERBS = [
     part: "Kwitnące ziele, ścinane nad ziemią w pełnym słońcu",
     moc: "Ziele matczyne i zaduszne — kadzono nim przy porodach i przy zmarłych. Nazwa wiąże ją z matką i z pamięcią o przodkach.",
     zrodlo: "Okadzanie macierzanką przy porodzie i przy zmarłych — poświadczone w polskiej etnografii.",
+    kadzidlo: {
+      czesc: "Kwitnące ziele, suszone",
+      jak: "Palone przy porodach i przy zmarłych — dym miał towarzyszyć przejściu, nie tylko oczyszczać pomieszczenie.",
+      zrodlo: "Poświadczone w polskiej etnografii.",
+    },
     dzien: "Piątek",
     zywiol: "Powietrze",
     rodzina: "Jasnotowate (Lamiaceae)",
@@ -714,6 +719,11 @@ export const HERBS = [
     part: "Dojrzałe, granatowe szyszkojagody drugiego roku",
     moc: "Dym z jałowca oczyszczał chałupy z chorób i złych mocy — okadzano nim obory i izby przed świętami. Ochrona progu domu.",
     zrodlo: "Okadzanie jałowcem — bardzo dobrze udokumentowane w polskiej etnografii.",
+    kadzidlo: {
+      czesc: "Gałązki i szyszkojagody, suszone",
+      jak: "Spalane na węgielku lub żarze — dymem okadzano izby i obory przed świętami, na oczyszczenie i ochronę progu domu.",
+      zrodlo: "Bardzo dobrze udokumentowane w polskiej etnografii.",
+    },
     dzien: "Niedziela",
     zywiol: "Ogień",
     rodzina: "Cyprysowate (Cupressaceae)",
@@ -1069,6 +1079,11 @@ export const HERBS = [
     kategoria: "Trujące",
     trujaca: true,
     uwaga: "NAJSILNIEJ TRUJĄCA ROŚLINA POLSKIEJ FLORY. Akonityna wchłania się także przez skórę — nie zrywać gołą ręką i nie wkładać do koszyka z ziołami na napar. Najwięcej trucizny jest w korzeniu. Dawka śmiertelna dla dorosłego to kilka miligramów akonityny, czyli ułamek grama korzenia. Objawy: mrowienie i drętwienie warg oraz języka, potem wymioty, zaburzenia rytmu serca, porażenie oddychania. Odtrutki nie ma, leczenie jest wyłącznie objawowe. Przy podejrzeniu zatrucia dzwoń pod 112. Ludowe użycie wewnętrzne — „na smutki”, „na nudy i szaleństwo” — jest zapisem etnograficznym, NIE przepisem do powtórzenia.",
+    kadzidlo: {
+      czesc: "Poświęcona roślina, całe ziele",
+      jak: "Pod Przeworskiem poświęconym tojadem kadzono izbę i bydło — na choroby, na dojność krów i wydajność masła. To zapis historyczny, NIE przepis do powtórzenia: tojad jest najsilniej trującą rośliną polskiej flory, akonityna wchłania się przez skórę już przy zrywaniu, a palenie trującej rośliny w zamkniętym pomieszczeniu niesie własne ryzyko.",
+      zrodlo: "Zapis z okolic Przeworska — Słownik Adama Fischera, PTL, Wrocław 2016, s. 479–480.",
+    },
     sobowtor: {
       namePl: "Chrzan i seler korzeniowy",
       nameLat: "Armoracia rusticana, Apium graveolens",

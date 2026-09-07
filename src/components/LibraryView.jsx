@@ -32,7 +32,10 @@ export default function LibraryView({ onOpen, collection }) {
         // "mordownika", nie "Aconitum napellus".
         (h.nazwyLudowe?.nazwy || []).some((n) =>
           n.toLowerCase().includes(q)
-        )
+        ) ||
+        // "kadzidło" ma trafiać na rośliny, którymi tradycyjnie okadzano —
+        // nawet jeśli słowo nie pada w opisie mocy.
+        (h.kadzidlo?.jak || "").toLowerCase().includes(q)
       );
     });
   }, [query, category]);

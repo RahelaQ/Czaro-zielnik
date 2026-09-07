@@ -1,6 +1,8 @@
 import React from "react";
 import HerbImage from "./HerbImage.jsx";
 import HarvestOfMonth from "./HarvestOfMonth.jsx";
+import UpcomingMoonPhases from "./UpcomingMoonPhases.jsx";
+import UpcomingEvents from "./UpcomingEvents.jsx";
 import { HERBS } from "../data/herbs.js";
 import { BasketIcon, CalendarIcon, CameraIcon } from "./Icons.jsx";
 import Logo from "./Logo.jsx";
@@ -110,6 +112,10 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
           </button>
         </div>
       </section>
+
+      <UpcomingMoonPhases />
+
+      <UpcomingEvents />
 
       <HarvestOfMonth herbs={HERBS} onOpen={onOpen} />
 

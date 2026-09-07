@@ -108,3 +108,27 @@ export function BookIcon(props) {
     </svg>
   );
 }
+
+// Płomień — sabaty ogniowe Koła Roku (Imbolc, Beltane, Lughnasadh, Samhain)
+// i te liczone astronomicznie (Ostara, Litha, Mabon, Yule) w jednej ikonie —
+// rozróżnia je opis słowny obok, nie kształt.
+export function FlameIcon(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M12 3c1 3-3 4-3 8a5 5 0 0 0 10 0c0-2-1-3-2-3.5.3 1.5-.5 2.5-1.5 2.5-1.4 0-1.8-1.3-1-2.5C15.5 6 13.5 5 12 3z" />
+    </svg>
+  );
+}
+
+// Kiełek — start sezonu zbioru. Prosta łodyżka z dwoma listkami, żeby nie
+// mylić z pełnym liściem LeafIcon (ten oznacza zbiory już gotowe, nie
+// dopiero zaczynające się).
+export function SproutIcon(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M12 21V11" />
+      <path d="M12 12c0-4-3-6-7-6 0 4 3 6 7 6z" />
+      <path d="M12 9c0-3.5 2.5-5.5 6-5.5 0 3.5-2.5 5.5-6 5.5z" />
+    </svg>
+  );
+}

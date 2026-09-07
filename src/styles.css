@@ -1000,6 +1000,104 @@ body { background: var(--bg-page); }
   color: var(--text-muted);
 }
 
+/* --------------------------------------------------- Upcoming (Home) */
+.upcoming-moon-row {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 0 1.4rem 0.2rem;
+  scrollbar-width: none;
+}
+.upcoming-moon-row::-webkit-scrollbar { display: none; }
+.upcoming-moon-card {
+  flex: 0 0 auto;
+  width: 5.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 0.5rem;
+  box-shadow: var(--shadow-card);
+  color: var(--accent);
+}
+.upcoming-moon-card-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: center;
+  line-height: 1.2;
+}
+.upcoming-moon-card-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0 1.4rem;
+}
+.event-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 0.95rem;
+  box-shadow: var(--shadow-card);
+}
+.event-card-icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-image);
+  color: var(--accent);
+}
+.event-card-icon svg { width: 16px; height: 16px; }
+.event-card-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.event-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+.event-card-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 0.15rem;
+}
+.event-card-date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-body);
+  text-align: right;
+}
+.event-card-time {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
 /* ------------------------------------------------------------ Detail overlay */
 .overlay {
   position: fixed;
@@ -1485,6 +1583,9 @@ body { background: var(--bg-page); }
 
 /* Sobowtor — najwazniejsza sekcja w calej appce. */
 .warn-box--lookalike { border-left: 3px solid #9A3B3B; }
+
+/* Kadzidło — informacyjna, nie alarmowa: kolor akcentu appki, nie ostrzegawczy. */
+.warn-box--incense { border-left: 3px solid var(--accent-pink); }
 
 .lookalike-name {
   font-weight: 600;

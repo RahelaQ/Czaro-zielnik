@@ -141,6 +141,22 @@ export default function HerbDetail({ herb, onClose, collection, wracamyDo }) {
             </div>
           )}
 
+          {/* Kadzidło — czym dana roślina bywała okadzana i po co. Stoi PO
+              ostrzeżeniu o roślinie, nie przed nim: przy roślinach trujących
+              (np. tojad) ostrzeżenie ma paść jako pierwsze. */}
+          {herb.kadzidlo && (
+            <div className="warn-box warn-box--incense" role="note">
+              <h3 className="warn-box__label">Kadzidło</h3>
+              <p>
+                <strong>Część rośliny:</strong> {herb.kadzidlo.czesc}
+              </p>
+              <p>{herb.kadzidlo.jak}</p>
+              {herb.kadzidlo.zrodlo && (
+                <p className="zrodlo-note">Zapis: {herb.kadzidlo.zrodlo}</p>
+              )}
+            </div>
+          )}
+
           {/* Sobowtór. To jedyna sekcja w całej appce, która realnie ratuje
               zdrowie — dlatego jest wyżej niż tabelka botaniczna. */}
           {herb.sobowtor && (
