@@ -21,8 +21,23 @@ function herbOfTheDay() {
   return HERBS_DNIA[dayIndex % HERBS_DNIA.length];
 }
 
-export default function HomeView({ onOpen, onNavigate, collectionCount, recentHerbs }) {
+export default function HomeView({
+  onOpen,
+  onNavigate,
+  collectionCount,
+  recentHerbs,
+  onQuickShot,
+}) {
   const herb = herbOfTheDay();
+
+  // Aparat z ekranu glownego omija zakladke "Rozpoznaj": plik trafia prosto
+  // do App, ktore przelacza ekran i oddaje zdjecie do rozpoznania. Stojac nad
+  // nieznana roslina liczy sie jedno tapniecie, nie trzy.
+  const zrobZdjecie = (e) => {
+    const plik = e.target.files?.[0];
+    e.target.value = ""; // zeby dalo sie zrobic drugie zdjecie tej samej rosliny
+    if (plik) onQuickShot?.(plik);
+  };
 
   return (
     <div className="home-view">
@@ -35,6 +50,31 @@ export default function HomeView({ onOpen, onNavigate, collectionCount, recentHe
           <span className="lockup-rule" aria-hidden="true" />
           <span className="wordmark">CZARO — ZIELNIK</span>
         </h1>
+
+        {/*
+          Aparat pod kciukiem, nie dwa ekrany dalej.
+
+          To <label> z ukrytym polem pliku, nie <button>: atrybut
+          capture="environment" otwiera aparat telefonu bezposrednio, bez
+          posrednictwa Reacta i bez pytania o uprawnienia do strumienia wideo.
+          Pole ma klase visually-hidden, a NIE display: none — element ukryty
+          przez display: none nie lapie fokusu i skrotu nie dalo by sie
+          uruchomic z klawiatury.
+
+          Nazwe dostepna niesie aria-label na polu, bo to ono jest kontrolka.
+          Tak samo zrobiony jest przycisk na ekranie "Rozpoznaj".
+        */}
+        <label className="quick-cam" title="Zrób zdjęcie i rozpoznaj">
+          <CameraIcon width="19" height="19" aria-hidden="true" focusable="false" />
+          <input
+            type="file"
+            className="visually-hidden"
+            accept="image/*"
+            capture="environment"
+            aria-label="Zrób zdjęcie rośliny i rozpoznaj ją"
+            onChange={zrobZdjecie}
+          />
+        </label>
       </div>
 
       <section aria-labelledby="zielo-dnia">

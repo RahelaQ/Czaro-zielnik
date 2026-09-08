@@ -43,6 +43,11 @@ const NAZWY_EKRANOW = {
 export default function App() {
   const [tab, setTab] = useState("home");
   const [opened, setOpened] = useState(null);
+  // Zdjecie zrobione skrotem z ekranu glownego. Zyje tutaj przez jeden render:
+  // App przelacza ekran na "Rozpoznaj" i podaje mu plik, a IdentifyView bierze
+  // go i od razu zeruje. Bez tego zerowania powrot na ten ekran rozpoznawalby
+  // stare zdjecie jeszcze raz.
+  const [szybkieZdjecie, setSzybkieZdjecie] = useState(null);
   const collection = useMyCollection();
   const recent = useRecentlyViewed();
   const theme = useTheme();
@@ -76,6 +81,11 @@ export default function App() {
   // a inert odbiera fokus swoim potomkom — czyli temu przyciskowi. Dluzszy
   // komentarz stoi w hooks/useDialog.js.
   const wyzwalacz = useRef(null);
+
+  const zrobZdjecieZEkranuGlownego = (plik) => {
+    setSzybkieZdjecie(plik);
+    setTab("rozpoznaj");
+  };
 
   const openHerb = (herb) => {
     wyzwalacz.current =
@@ -155,6 +165,7 @@ export default function App() {
               onNavigate={setTab}
               collectionCount={collection.items.length}
               recentHerbs={recentHerbs}
+              onQuickShot={zrobZdjecieZEkranuGlownego}
             />
           )}
 
@@ -180,6 +191,8 @@ export default function App() {
               onOpenHerb={openHerb}
               onNavigate={setTab}
               collection={collection}
+              initialFile={szybkieZdjecie}
+              onInitialFileTaken={() => setSzybkieZdjecie(null)}
             />
           )}
         </main>

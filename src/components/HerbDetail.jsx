@@ -4,6 +4,7 @@ import PhotoViewer from "./PhotoViewer.jsx";
 import { useDialog } from "../hooks/useDialog.js";
 import { useHerbNote } from "../hooks/useHerbNote.js";
 import { HERBS, MONTH_NAMES } from "../data/herbs.js";
+import { NOTA_CZYM_JEST, ZRODLA } from "../data/sources.js";
 
 function archiveLabel(herb) {
   if (herb.isCustom) return "ARCHIWUM BOTANICZNE · ROZPOZNANE";
@@ -226,6 +227,35 @@ export default function HerbDetail({ herb, onClose, collection, wracamyDo }) {
             onBlur={() => setNote(draft)}
             rows={3}
           />
+
+          {/*
+            Drobny druk. Stoi pod KAZDYM haslem, takze pod roslina rozpoznana
+            ze zdjecia, i celowo na koncu karty: kto doczytal do tego miejsca,
+            wlasnie przeczytal tradycje ludowa i ostrzezenia — i to jest moment,
+            w ktorym trzeba powiedziec, czym ta karta jest, a czym nie.
+
+            Tresc siedzi w src/data/sources.js, zeby dalo sie ja poprawic bez
+            dotykania kodu i zeby byla jedna dla calej appki.
+
+            <details> jest natywne: dziala Tabem i Enterem, dziala bez
+            JavaScriptu i nie wymaga pulapki fokusu, choc karta rosliny jest
+            oknem modalnym.
+          */}
+          <div className="card-legal">
+            <p>{NOTA_CZYM_JEST}</p>
+
+            <details className="card-legal__more">
+              <summary>Na czym to jest oparte</summary>
+              <dl className="card-legal__list">
+                {ZRODLA.map((z) => (
+                  <div key={z.tytul} className="card-legal__row">
+                    <dt>{z.tytul}</dt>
+                    <dd>{z.tresc}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          </div>
         </div>
       </div>
 
