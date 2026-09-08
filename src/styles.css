@@ -1000,6 +1000,104 @@ body { background: var(--bg-page); }
   color: var(--text-muted);
 }
 
+/* --------------------------------------------------- Upcoming (Home) */
+.upcoming-moon-row {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 0 1.4rem 0.2rem;
+  scrollbar-width: none;
+}
+.upcoming-moon-row::-webkit-scrollbar { display: none; }
+.upcoming-moon-card {
+  flex: 0 0 auto;
+  width: 5.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 0.5rem;
+  box-shadow: var(--shadow-card);
+  color: var(--accent);
+}
+.upcoming-moon-card-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: center;
+  line-height: 1.2;
+}
+.upcoming-moon-card-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0 1.4rem;
+}
+.event-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 0.95rem;
+  box-shadow: var(--shadow-card);
+}
+.event-card-icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-image);
+  color: var(--accent);
+}
+.event-card-icon svg { width: 16px; height: 16px; }
+.event-card-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.event-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+.event-card-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 0.15rem;
+}
+.event-card-date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-body);
+  text-align: right;
+}
+.event-card-time {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
 /* ------------------------------------------------------------ Detail overlay */
 .overlay {
   position: fixed;
@@ -1120,6 +1218,34 @@ body { background: var(--bg-page); }
    zmienne zamiast pozyczonej. */
 .tag--month { background: var(--tag-month-bg); color: var(--tag-month-text); }
 .detail-body p { line-height: 1.6; font-size: 0.88rem; margin: 0 0 0.9rem; color: var(--text-body); }
+
+/* ---------------------------------------------- Akapity z wlasnym wygladem
+   Regula wyzej ma specyficznosc (0,1,1) i bije KAZDA pojedyncza klase (0,1,0)
+   postawiona na akapicie wewnatrz karty. Przez to nazwa lacinska i nazwy
+   ludowe rysowaly sie stopniem i kolorem tekstu ciaglego, choc obie klasy
+   deklaruja co innego — a ta sama klasa .eyebrow uzyta na ekranie "Rozpoznaj",
+   poza karta, wygladala jak nalezy. Jedna klasa, dwa wyglady: blad, nie
+   decyzja.
+
+   Podwojenie selektora (".eyebrow, p.eyebrow") tu NIE wystarcza: daje remis
+   (0,1,1), a przy remisie wygrywa regula stojaca pozniej w pliku — czyli
+   nadal ta powyzej. Stad ".detail-body p.klasa" (0,2,1) i stad ten blok stoi
+   tuz pod nia, a nie przy definicjach klas.
+
+   Dokladajac tu cokolwiek: sprawdz w inspektorze, czy regula weszla. Sama
+   klasa nie wystarczy. */
+.detail-body p.eyebrow {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0 0 0.15rem;
+}
+.detail-body p.folk-names {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  margin: 0 0 0.4rem;
+}
 /* Tabelka botaniczna to lista definicji (dl/dt/dd), nie dwa spany obok
    siebie — inaczej czytnik ekranu czyta "Rodzina Astrowate Dzien wtorek"
    jednym ciagiem, bez informacji, ktore slowo jest etykieta, a ktore
@@ -1169,9 +1295,15 @@ body { background: var(--bg-page); }
 .upload-area, .upload-alt { position: relative; }
 
 /* Kontener zywego komunikatu o postepie musi istniec w drzewie ZANIM cos sie
-   w nim pojawi — czytnik ekranu ogłasza tylko zmiany wewnatrz obszaru, ktory
-   juz obserwuje. Pusty nie zajmuje miejsca. */
-.id-progress-live:empty { display: none; }
+   w nim pojawi — czytnik ekranu oglasza tylko zmiany wewnatrz obszaru, ktory
+   juz obserwuje.
+   Stalo tu `.id-progress-live:empty { display: none; }` i to bylo dokladne
+   zaprzeczenie powyzszego zdania: element z display: none nie istnieje
+   w drzewie dostepnosci, wiec czytnik zaczynal obserwowac ten obszar dopiero
+   w chwili, gdy pojawial sie w nim tekst — a pierwszej zmiany w swiezo
+   dodanym obszarze wiekszosc czytnikow nie oglasza. Regula miala chronic
+   przed odstepem po pustym kontenerze; zmierzone: pusty ma zero wysokosci,
+   zero marginesu i zero wypelnienia, wiec nie ma czego chowac. */
 
 .id-result-desc {
   margin: 0.8rem 0 0;
@@ -1562,6 +1694,9 @@ p.zrodlo-note {
 
 /* Sobowtor — najwazniejsza sekcja w calej appce. */
 .warn-box--lookalike { border-left: 3px solid #9A3B3B; }
+
+/* Kadzidło — informacyjna, nie alarmowa: kolor akcentu appki, nie ostrzegawczy. */
+.warn-box--incense { border-left: 3px solid var(--accent-pink); }
 
 .lookalike-name {
   font-weight: 600;

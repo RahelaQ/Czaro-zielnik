@@ -13,7 +13,7 @@ function archiveLabel(herb) {
   return `ARCHIWUM BOTANICZNE · ${num}`;
 }
 
-export default function HerbDetail({ herb, onClose, collection }) {
+export default function HerbDetail({ herb, onClose, collection, wracamyDo }) {
   const { note, setNote } = useHerbNote(herb.id);
   const [draft, setDraft] = useState(note);
   // Lista zdjęć otwarta w podglądzie pełnoekranowym (null = zamknięty).
@@ -21,7 +21,7 @@ export default function HerbDetail({ herb, onClose, collection }) {
 
   // Karta jest oknem modalnym: trzyma fokus, zamyka sie Escape i oddaje
   // fokus tam, skad ja otwarto. Patrz hooks/useDialog.js.
-  const kartaRef = useDialog(onClose);
+  const kartaRef = useDialog(onClose, wracamyDo);
 
   const uid = useId();
   const titleId = `karta-${uid}`;
@@ -139,6 +139,22 @@ export default function HerbDetail({ herb, onClose, collection }) {
             <div className="warn-box warn-box--plant" role="note">
               <h3 className="warn-box__label">Uwaga</h3>
               <p>{herb.uwaga}</p>
+            </div>
+          )}
+
+          {/* Kadzidło — czym dana roślina bywała okadzana i po co. Stoi PO
+              ostrzeżeniu o roślinie, nie przed nim: przy roślinach trujących
+              (np. tojad) ostrzeżenie ma paść jako pierwsze. */}
+          {herb.kadzidlo && (
+            <div className="warn-box warn-box--incense" role="note">
+              <h3 className="warn-box__label">Kadzidło</h3>
+              <p>
+                <strong>Część rośliny:</strong> {herb.kadzidlo.czesc}
+              </p>
+              <p>{herb.kadzidlo.jak}</p>
+              {herb.kadzidlo.zrodlo && (
+                <p className="zrodlo-note">Zapis: {herb.kadzidlo.zrodlo}</p>
+              )}
             </div>
           )}
 

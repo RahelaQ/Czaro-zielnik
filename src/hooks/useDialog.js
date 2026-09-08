@@ -39,7 +39,9 @@ function focusowalne(root) {
   );
 }
 
-export function useDialog(onClose) {
+// Drugi argument jest opcjonalny: element, do ktorego ma wrocic fokus po
+// zamknieciu. Przy karcie rosliny trzeba go podac — patrz komentarz w efekcie.
+export function useDialog(onClose, wracamyDoWskazany) {
   const ref = useRef(null);
   // onClose bywa funkcja strzalkowa tworzona przy kazdym renderze; trzymamy ja
   // w refie, zeby efekt nie przepinal sie po kazdym wpisanym znaku w notatce.
@@ -50,7 +52,22 @@ export function useDialog(onClose) {
     const okno = ref.current;
     if (!okno) return;
 
-    const wracamyDo = document.activeElement;
+    // Element, do ktorego oddamy fokus przy zamknieciu.
+    //
+    // Wolajacy moze go podac wprost — i przy karcie rosliny MUSI. App wlacza
+    // `inert` na calym tle w tym samym renderze, w ktorym montuje to okno,
+    // a wedlug specyfikacji uczynienie przodka inert odbiera fokus jego
+    // potomkom. Dzieje sie to przy zmianie DOM, czyli ZANIM ten efekt sie
+    // uruchomi — a przyciski otwierajace karte leza wlasnie w tym tle, wiec
+    // document.activeElement moze tu juz pokazywac <body>.
+    //
+    // Chromium sprawdzony: oddaje fokus poprawnie takze bez tego argumentu.
+    // Ale to zalezy od momentu, w ktorym konkretny silnik sprzata fokus po
+    // wlaczeniu inert, a nie od czegokolwiek zagwarantowanego. iOS Safari
+    // jest tu glowna platforma i sprawdzic go stad nie sposob. Dlatego
+    // wolajacy lapie przycisk w onClick, zanim cokolwiek zdazy go zgasic,
+    // a document.activeElement zostaje wylacznie jako wyjscie awaryjne.
+    const wracamyDo = wracamyDoWskazany ?? document.activeElement;
     stos.push(okno);
 
     if (stos.length === 1) {
