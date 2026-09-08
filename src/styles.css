@@ -1298,6 +1298,58 @@ body { background: var(--bg-page); }
 .theme-toggle:active { transform: scale(0.94); }
 
 /* ==========================================================================
+   SKROT DO APARATU NA EKRANIE GLOWNYM
+
+   Ten sam ksztalt i ta sama wysokosc co przelacznik motywu, tuz na lewo od
+   niego — dwa kolka w gornym prawym rogu czytaja sie jako para narzedzi,
+   a nie jako dwa przypadkowe przyciski.
+
+   position: fixed, tak jak przelacznik: dzieki temu oba stoja na jednej linii
+   niezaleznie od wysokosci wiersza ze znakiem, i aparat zostaje pod kciukiem
+   takze po przewinieciu ekranu glownego w dol. Renderuje sie tylko w HomeView,
+   wiec na pozostalych ekranach go nie ma.
+   ========================================================================== */
+
+.quick-cam {
+  position: fixed;
+  top: calc(1.2rem + env(safe-area-inset-top));
+  /* odstep od krawedzi + szerokosc przelacznika + przerwa miedzy nimi */
+  right: calc(1.4rem + 34px + 0.55rem);
+  z-index: 40;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--icon-stroke);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quick-cam:active { transform: scale(0.94); }
+
+/* Kontrolka to ukryte pole pliku w srodku, nie sam <label> — obwodke fokusu
+   trzeba wiec narysowac na rodzicu. Bez tego przejscie Tabem po ekranie
+   glownym mijaloby aparat niewidocznie. */
+.quick-cam:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* To samo na ekranie "Rozpoznaj": tam rowniez fokus lapie ukryte pole pliku,
+   a widac go bylo dotad wylacznie po domyslnej obwodce przegladarki, czyli
+   w praktyce wcale. */
+.upload-area:focus-within,
+.upload-alt:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
    ROZPOZNAWANIE — postep, kolejka, bledy
    ========================================================================== */
 
@@ -1413,13 +1465,72 @@ body { background: var(--bg-page); }
    OSTRZEZENIA I SOBOWTORY
    ========================================================================== */
 
-.zrodlo-note {
+/* Selektor jest podwojony celowo. Sama klasa .zrodlo-note (0,1,0) przegrywala
+   specyficznoscia z ".detail-body p" (0,1,1) i deklarowany tu stopien pisma
+   oraz kolor nigdy sie nie stosowaly — linia "Zapis:" wygladala dokladnie jak
+   tekst ciagly, choc mialaby byc drobnym drukiem. Kursywa dzialala, bo
+   font-style nie stoi w tamtej regule; stad zludzenie, ze wszystko gra. */
+.zrodlo-note,
+p.zrodlo-note {
   margin: 0.5rem 0 0;
   color: var(--text-muted);
   font-size: 0.74rem;
   font-style: italic;
   line-height: 1.5;
 }
+
+/* --------------------------------------------------------- Drobny druk
+   Nota edukacyjna i zrodla na koncu karty rosliny. Ma byc czytelna, a nie
+   niewidoczna: 0.72rem to maly stopien pisma, ale --text-muted trzyma wobec
+   powierzchni karty ponad 4,5 : 1, wiec wymog kontrastu jest spelniony.
+   Nie zmniejszaj tego dalej i nie podmieniaj koloru na jasniejszy. */
+
+.card-legal {
+  margin: 1.6rem 0 0.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.card-legal p,
+.detail-body .card-legal p {
+  margin: 0 0 0.5rem;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.card-legal__more { margin-top: 0.35rem; }
+
+.card-legal__more > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0;
+  color: var(--text-body);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.card-legal__more > summary::-webkit-details-marker { display: none; }
+.card-legal__more > summary::before {
+  content: "▸";
+  display: inline-block;
+  font-size: 0.9em;
+  transition: transform 0.15s ease;
+}
+.card-legal__more[open] > summary::before { transform: rotate(90deg); }
+
+.card-legal__list { margin: 0.4rem 0 0; }
+.card-legal__row { margin: 0 0 0.75rem; }
+.card-legal__row dt {
+  margin: 0 0 0.15rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+.card-legal__row dd { margin: 0; }
 
 .warn-box {
   margin: 1rem 0 0;
@@ -1773,6 +1884,7 @@ body { background: var(--bg-page); }
 .collection-row-remove::after,
 .herb-card-toggle::after,
 .theme-toggle::after,
+.quick-cam::after,
 .close-btn::after,
 .herb-photo__zoom::after,
 .tab-btn::after,

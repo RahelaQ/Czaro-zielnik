@@ -55,8 +55,128 @@
         }
       })();
     </script>
+
+    <script>
+      // Ekran powitalny pokazujemy tylko przy ZIMNYM starcie — pierwszym
+      // otwarciu w danej sesji przegladarki. Powrot do zminimalizowanej appki
+      // wchodzi wprost w tresc: w terenie sprawdza sie rosline kilkanascie razy
+      // pod rzad i powitanie za kazdym razem byloby kara za korzystanie.
+      //
+      // Decyzja musi zapasc TUTAJ, przed narysowaniem <body>. Gdyby element
+      // ukrywal sie dopiero z Reacta, przy cieplym starcie mrugnalby na jedna
+      // klatke — czyli dokladnie to, czemu ekran powitalny ma zapobiegac.
+      (function () {
+        var zimnyStart = true;
+        try {
+          zimnyStart = !sessionStorage.getItem("czaro-powitanie");
+          if (zimnyStart) sessionStorage.setItem("czaro-powitanie", "1");
+        } catch (e) {
+          // Tryb prywatny Safari potrafi rzucic przy sessionStorage. Wtedy
+          // powitanie pokaze sie za kazdym razem — to zla strona, po ktorej
+          // mozna sie pomylic: gorzej byloby nie pokazac go nigdy.
+        }
+        if (zimnyStart) {
+          window.__czaroPowitanieOd = Date.now();
+        } else {
+          document.documentElement.classList.add("bez-powitania");
+        }
+      })();
+    </script>
+
+    <style>
+      /* -------------------------------------------------------------------
+         EKRAN POWITALNY
+
+         Stoi w index.html, a nie w komponencie, bo ma byc widoczny ZANIM
+         cokolwiek z Reacta sie wczyta. Kolory sa tu wpisane wprost, tymi
+         samymi wartosciami co --bg-page i --text-main w styles.css: arkusz
+         moze jeszcze nie byc sparsowany, a zmienna, ktora sie nie rozwiazala,
+         dala by przezroczyste tlo.
+
+         Zejscie ekranu obsluguje src/main.jsx.
+         ------------------------------------------------------------------- */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background: #EAE4DA;
+        color: #3E4443;
+        opacity: 1;
+        transition: opacity 0.45s ease;
+      }
+      html[data-theme="dark"] #splash { background: #313531; color: #F2EEE4; }
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) #splash { background: #313531; color: #F2EEE4; }
+      }
+
+      /* Cieply start: elementu po prostu nie widac od pierwszej klatki. */
+      html.bez-powitania #splash { display: none; }
+
+      #splash.splash--gone { opacity: 0; pointer-events: none; }
+
+      /* Dwie animacje na dwoch elementach, nie jedna na jednym: obie ruszaja
+         transform, wiec postawione na tym samym elemencie wygaszalyby sie
+         nawzajem — zostalaby tylko ta zadeklarowana pozniej. */
+      .splash-mark { animation: czaro-wejscie 0.62s ease-out both; }
+      .splash-mark svg { display: block; animation: czaro-obrot 4.5s linear infinite; }
+
+      @keyframes czaro-wejscie {
+        from { opacity: 0; transform: scale(0.9); }
+        to   { opacity: 1; transform: none; }
+      }
+      @keyframes czaro-obrot { to { transform: rotate(360deg); } }
+      @keyframes czaro-zjaw {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      /* "Ogranicz ruch" w ustawieniach telefonu: znak sie rozjasnia, nie
+         obraca. To samo robi globalna regula w styles.css, ale ten arkusz
+         moze jeszcze nie dojechac — a powitanie dzieje sie wlasnie wtedy. */
+      @media (prefers-reduced-motion: reduce) {
+        .splash-mark { animation: czaro-zjaw 0.3s ease-out both; }
+        .splash-mark svg { animation: none; }
+      }
+    </style>
   </head>
   <body>
+    <!-- Ekran powitalny. Ten sam rysunek co src/components/Logo.jsx, wariant
+         "full" (owal, trzy liscie, trzy iskry), z grubosc kreski przeliczona
+         na stale: (120 / 96) * 1.6 = 2. Zdejmuje go src/main.jsx.
+
+         Nie wariant "veined", choc komentarz w Logo.jsx przewiduje go wlasnie
+         do splasha: zylki sa narysowane pod ksztalt LEAF_SOLO i przy trzech
+         lisciach dwie skrajne wychodza POZA obrys lisci bocznych. Na 38 px
+         w naglowku tego nie widac, bo tam wariant zylkowany nigdy nie wchodzi;
+         na 96 px widac od razu i wyglada jak usterka, nie jak ozdoba. -->
+    <div id="splash" role="presentation" aria-hidden="true">
+      <div class="splash-mark">
+        <svg
+          viewBox="0 0 120 120"
+          width="96"
+          height="96"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          focusable="false"
+        >
+          <ellipse cx="60" cy="60" rx="39" ry="47" />
+          <path d="M60 101 C43.5 84 43.5 61 60 42 C76.5 61 76.5 84 60 101 Z" />
+          <path d="M60 101 C39 97 27 80.5 25.5 61.5 C46 65.5 58.5 82 60 101 Z" />
+          <path d="M60 101 C81 97 93 80.5 94.5 61.5 C74 65.5 61.5 82 60 101 Z" />
+          <g opacity=".85">
+            <path d="M60 25 L60 35 M55 30 L65 30" />
+            <path d="M41 39 L41 45.5 M37.75 42.25 L44.25 42.25" />
+            <path d="M79 39 L79 45.5 M75.75 42.25 L82.25 42.25" />
+          </g>
+        </svg>
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
