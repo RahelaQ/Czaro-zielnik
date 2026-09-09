@@ -17,15 +17,26 @@ on:
   push:
     branches: [main]
 
+# `npm ci` uruchamia skrypty postinstall WSZYSTKICH zaleznosci — to ta sama
+# powierzchnia, ktora wykorzystuja robaki w rejestrze npm, tylko ze tutaj
+# dzieje sie w runnerze, gdzie w zasiegu jest GITHUB_TOKEN. Domyslne
+# uprawnienia tokenu zaleza od ustawien repo i moga obejmowac zapis.
+# Ten workflow niczego nie zapisuje: czyta kod, buduje, wypisuje rozmiar.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: npm ci + build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Przypiete do SHA, bo tag `v4` jest ruchomy: ktos z prawem zapisu
+      # do tamtego repo moze go przestawic na inny commit. Dependabot
+      # (.github/dependabot.yml) podbija te SHA za nas w osobnym PR.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: 'npm'

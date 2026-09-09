@@ -1,0 +1,21 @@
+# Podatnosc w fast-uri (audyt 2026-09-09) znalazla sie recznie, przez
+# `npm audit` odpalone przy okazji. Nastepna ma przyjsc sama, jako PR,
+# a nie czekac na kolejny reczny przeglad.
+#
+# Dwa ekosystemy, bo powierzchnia jest w dwoch miejscach: paczki npm
+# (glownie zaleznosci build-time — workbox, vite, esbuild) oraz akcje
+# GitHuba, ktore sa przypiete do SHA w build.yml i bez tego wpisu
+# zostalyby na tych SHA na zawsze.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
