@@ -4,3 +4,6 @@ dist
 *.bak
 build-czaro
 Claude outputs
+.env
+.env.local
+.env*.local
