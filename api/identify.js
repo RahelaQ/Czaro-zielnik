@@ -24,6 +24,12 @@ const PLANTNET_TIMEOUT_MS = 20000;
 // ale odrzucenie tutaj kosztuje mniej niż zdekodowanie base64 do bufora.
 const MAX_BASE64 = 4_000_000;
 
+// Pole `mediaType` z body trafia wprost do Content-Type części multipart
+// wysyłanej do Pl@ntNet. Klient wysyła tam zawsze "image/jpeg"
+// (src/utils/image.js, useIdentifyQueue.js), więc nie ma po co przepuszczać
+// dowolnego tekstu z żądania — allowlista nic nie traci i nic nie kosztuje.
+const DOZWOLONE_TYPY = new Set(["image/jpeg", "image/png", "image/webp"]);
+
 function findZielnikMatch(scientificName) {
   const target = normalizeLatin(scientificName);
   if (!target) return null;
@@ -88,7 +94,9 @@ export default async function handler(req, res) {
 
   try {
     const buffer = Buffer.from(image, "base64");
-    const blob = new Blob([buffer], { type: mediaType || "image/jpeg" });
+    const blob = new Blob([buffer], {
+      type: DOZWOLONE_TYPY.has(mediaType) ? mediaType : "image/jpeg",
+    });
 
     const form = new FormData();
     form.append("images", blob, "photo.jpg");
@@ -114,13 +122,33 @@ export default async function handler(req, res) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      // `data.message` szło wcześniej wprost do `opis`, czyli na ekran —
+      // jedyne miejsce w całej aplikacji, gdzie tekst obcego serwisu był
+      // pokazywany użytkowniczce. Teraz oryginał zostaje w logach Vercela,
+      // a na ekran idzie własny komunikat.
+      //
+      // Ale NIE jeden na wszystko. Przy wyczerpanym limicie dobowym rada
+      // "spróbuj lepszego zdjęcia" jest aktywnie myląca: można tak
+      // fotografować do wieczora i nigdy nie trafić, bo problem nie jest
+      // w kadrze. Rozróżnienie idzie po kodzie odpowiedzi.
       console.error("Pl@ntNet error:", response.status, data);
-      res.status(200).json(
-        nieRozpoznano(
-          data?.message ||
-            "Pl@ntNet nie rozpoznał rośliny na tym zdjęciu. Spróbuj sfotografować pojedynczy liść albo kwiat z bliska, na spokojnym tle."
-        )
-      );
+
+      let opis;
+      if (response.status === 429) {
+        opis =
+          "Dzienny limit rozpoznań w Pl@ntNet jest wyczerpany — darmowy klucz " +
+          "to 500 na dobę. Zdjęcie jest w porządku, spróbuj ponownie po północy.";
+      } else if (response.status === 401 || response.status === 403) {
+        opis =
+          "Pl@ntNet odrzucił klucz dostępu tej aplikacji. To usterka po naszej " +
+          "stronie, nie problem ze zdjęciem — klucz trzeba odnowić w panelu Vercela.";
+      } else {
+        opis =
+          "Pl@ntNet nie rozpoznał rośliny na tym zdjęciu. Spróbuj sfotografować " +
+          "pojedynczy liść albo kwiat z bliska, na spokojnym tle.";
+      }
+
+      res.status(200).json(nieRozpoznano(opis));
       return;
     }
 
